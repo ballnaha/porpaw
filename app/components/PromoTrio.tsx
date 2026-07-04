@@ -36,7 +36,11 @@ const darkPill = {
 
 export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
   return (
-    <Container maxWidth="lg" id="promo" sx={{ py: { xs: 3, md: 4 }, scrollMarginTop: "40px" }}>
+    <Container
+      maxWidth="lg"
+      id="promo"
+      sx={{ py: { xs: 3, md: 4 }, px: { xs: 2.5, sm: 3, lg: 1 }, scrollMarginTop: "40px" }}
+    >
       <Box
         sx={{
           display: "grid",
@@ -45,7 +49,7 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
             md: "repeat(2, minmax(0, 1fr))",
             lg: "minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 0.95fr)",
           },
-          gap: 2.5,
+          gap: 2,
           alignItems: "stretch",
         }}
       >
@@ -56,24 +60,26 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
             overflow: "hidden",
             bgcolor: DS.lavenderSoft,
             borderRadius: "28px",
-            p: 3.5,
-            minHeight: 380,
+            p: 3,
+            minHeight: { xs: 340, md: 320 },
           }}
         >
           <Box sx={{ position: "relative", zIndex: 2, maxWidth: 200 }}>
-            <Typography sx={{ fontSize: 24, fontWeight: 900, color: DS.ink, lineHeight: 1.15, letterSpacing: "-0.01em" }}>
-              Subscribe &amp; Save
+            <Typography sx={{ fontSize: 22, fontWeight: 900, color: DS.ink, lineHeight: 1.08, letterSpacing: "-0.01em" }}>
+              Subscribe
+              <br />
+              &amp; Save
             </Typography>
-            <Typography sx={{ fontSize: 13, color: "#5b5b64", fontWeight: 700, mt: 1.5, lineHeight: 1.5 }}>
+            <Typography sx={{ fontSize: 12, color: "#5b5b64", fontWeight: 600, mt: 1.5, lineHeight: 1.5 }}>
               Never run out of what your pet loves.
             </Typography>
-            <Box sx={{ display: "grid", gap: 1.1, mt: 2 }}>
+            <Box sx={{ display: "grid", gap: 0.85, mt: 2 }}>
               {CHECKS.map((c) => (
                 <Box key={c} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Box
                     sx={{
-                      width: 18,
-                      height: 18,
+                      width: 14,
+                      height: 14,
                       borderRadius: "50%",
                       bgcolor: DS.mintDeep,
                       color: DS.white,
@@ -82,9 +88,9 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
                       flexShrink: 0,
                     }}
                   >
-                    <Check size={11} strokeWidth={3} />
+                    <Check size={9} strokeWidth={3} />
                   </Box>
-                  <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: DS.ink }}>{c}</Typography>
+                  <Typography sx={{ fontSize: 10.5, fontWeight: 700, color: DS.ink }}>{c}</Typography>
                 </Box>
               ))}
             </Box>
@@ -92,7 +98,7 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
               onClick={handleLineLogin}
               disableElevation
               endIcon={<ArrowRight size={15} strokeWidth={2.5} />}
-              sx={{ ...darkPill, mt: 3 }}
+              sx={{ ...darkPill, mt: 2.5, px: 2.5, py: 1.1, fontSize: 11.5 }}
             >
               Start Subscribing
             </Button>
@@ -102,16 +108,22 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
           <Box
             sx={{
               position: "absolute",
-              right: { xs: -18, md: -24 },
-              top: { xs: 8, md: 18 },
-              width: { xs: 150, md: 200 },
-              height: { xs: 150, md: 200 },
+              right: { xs: 15, md: 15 },
+              top: { xs: 12, md: 8 },
+              width: { xs: 205, md: 235 },
+              height: { xs: 250, md: 285 },
               zIndex: 1,
               opacity: 0.96,
               pointerEvents: "none",
             }}
           >
-            <Image src="/service_delivery.png" alt="สุนัขรับกล่องพัสดุ" fill sizes="200px" style={{ objectFit: "contain" }} />
+            <Image
+              src="/images/delivery.png"
+              alt="สุนัขรับกล่องพัสดุ"
+              fill
+              sizes="235px"
+              style={{ objectFit: "cover", objectPosition: "24% center", mixBlendMode: "multiply" }}
+            />
           </Box>
 
           {/* Deliver-every card */}
@@ -119,11 +131,11 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
             sx={{
               position: "absolute",
               right: { xs: 14, md: 20 },
-              bottom: 20,
+              bottom: 16,
               zIndex: 3,
               bgcolor: DS.white,
-              borderRadius: "18px",
-              p: "12px 14px",
+              borderRadius: "15px",
+              p: "10px 12px",
               boxShadow: "0 12px 28px rgba(43,43,51,.12)",
             }}
           >
@@ -159,9 +171,9 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
         </Box>
 
         {/* ── 2 · Popular Sets ── */}
-        <Box sx={{ bgcolor: DS.card, borderRadius: "28px", p: 3.5, display: "flex", flexDirection: "column" }}>
+        <Box sx={{ bgcolor: "#FBF7F3", borderRadius: "28px", p: 3, minHeight: 320, display: "flex", flexDirection: "column" }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Typography sx={{ fontSize: 24, fontWeight: 900, color: DS.ink, letterSpacing: "-0.01em" }}>
+            <Typography sx={{ fontSize: 22, fontWeight: 900, color: DS.ink, letterSpacing: "-0.01em" }}>
               Popular Sets
             </Typography>
             <Button
@@ -187,7 +199,7 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
             sx={{
               mt: 2.25,
               borderRadius: "20px",
-              height: 180,
+              height: 150,
               background: "linear-gradient(145deg,#FBEFE4,#F3E2CE)",
               display: "grid",
               placeItems: "center",
@@ -195,24 +207,24 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
             }}
           >
             <Box sx={{ position: "relative", width: "82%", height: "88%" }}>
-              <Image src="/service_subscription.png" alt="กล่องเซ็ตสินค้าสัตว์เลี้ยง" fill sizes="300px" style={{ objectFit: "contain" }} />
+              <Image src="/images/banner7.webp" alt="กล่องเซ็ตสินค้า Porpaw" fill sizes="300px" style={{ objectFit: "contain" }} />
             </Box>
           </Box>
 
-          <Box sx={{ mt: 2, display: "flex", alignItems: "flex-end", gap: 1.5 }}>
+          <Box sx={{ mt: 1.5, display: "flex", alignItems: "flex-end", gap: 1.5 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography sx={{ fontSize: 16, fontWeight: 900, color: DS.ink }}>Puppy Starter Set</Typography>
-              <Typography sx={{ fontSize: 12, color: DS.gray, fontWeight: 700, mt: 0.5, lineHeight: 1.4 }}>
+              <Typography sx={{ fontSize: 14, fontWeight: 900, color: DS.ink }}>Puppy Starter Set</Typography>
+              <Typography sx={{ fontSize: 10.5, color: DS.gray, fontWeight: 700, mt: 0.25, lineHeight: 1.3 }}>
                 Everything they need to start strong!
               </Typography>
-              <Typography sx={{ fontSize: 16, fontWeight: 900, color: DS.ink, mt: 1 }}>฿1,290</Typography>
+              <Typography sx={{ fontSize: 15, fontWeight: 900, color: DS.ink, mt: 0.5 }}>฿1,290</Typography>
             </Box>
             <IconButton
               aria-label="เพิ่มลงตะกร้า"
               onClick={handleLineLogin}
               sx={{
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 bgcolor: DS.peach,
                 color: DS.white,
                 transition: "transform .2s",
@@ -229,36 +241,37 @@ export const PromoTrio: React.FC<PromoTrioProps> = ({ handleLineLogin }) => {
           sx={{
             bgcolor: DS.mint,
             borderRadius: "28px",
-            p: 3.5,
+            p: 3,
+            minHeight: 320,
             display: "flex",
             flexDirection: "column",
             gridColumn: { md: "1 / -1", lg: "auto" },
           }}
         >
-          <Typography sx={{ fontSize: 24, fontWeight: 900, color: DS.ink, lineHeight: 1.15, letterSpacing: "-0.01em" }}>
+          <Typography sx={{ fontSize: 22, fontWeight: 900, color: DS.ink, lineHeight: 1.08, letterSpacing: "-0.01em" }}>
             Build Your
             <br />
             Own Set
           </Typography>
-          <Typography sx={{ fontSize: 13, color: "#5b5b64", fontWeight: 700, mt: 1.5, lineHeight: 1.5 }}>
+          <Typography sx={{ fontSize: 12, color: "#5b5b64", fontWeight: 600, mt: 1.5, lineHeight: 1.5 }}>
             Mix and match your pet&apos;s favorites.
           </Typography>
           <Button
             onClick={handleLineLogin}
             disableElevation
             endIcon={<ArrowRight size={15} strokeWidth={2.5} />}
-            sx={{ ...darkPill, mt: 3, alignSelf: "flex-start" }}
+            sx={{ ...darkPill, mt: 2.5, alignSelf: "flex-start", px: 2.5, py: 1.1, fontSize: 11.5 }}
           >
             Start Building
           </Button>
 
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: "auto", pt: 3.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: "auto", pt: 2.5 }}>
             {BUILD_ITEMS.map((src, i) => (
               <React.Fragment key={src}>
                 <Box
                   sx={{
-                    width: 62,
-                    height: 62,
+                    width: 56,
+                    height: 56,
                     borderRadius: "50%",
                     bgcolor: DS.white,
                     boxShadow: "0 8px 18px rgba(43,43,51,.07)",

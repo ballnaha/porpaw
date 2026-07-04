@@ -20,7 +20,7 @@ const NAV = [
   { icon: Package, label: "Subscription", href: "#promo" },
   { icon: Gift, label: "Sets & Gifts", href: "#promo" },
   { icon: Compass, label: "Explore", href: "#explore" },
-  { icon: ShieldPlus, label: "Vet & Care", href: "#explore" },
+  { icon: ShieldPlus, label: "Vet & Care", href: "#care" },
   { icon: User, label: "Account", href: "#top" },
 ];
 

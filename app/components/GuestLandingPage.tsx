@@ -10,6 +10,7 @@ import { Hero } from "./Hero";
 import { Features } from "./Features";
 import { PromoTrio } from "./PromoTrio";
 import { Places } from "./Places";
+import { Healthcare } from "./Healthcare";
 import { Footer } from "./Footer";
 
 interface GuestLandingPageProps {
@@ -41,6 +42,7 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
         <Features />
         <PromoTrio handleLineLogin={handleLineLogin} />
         <Places handleLineLogin={handleLineLogin} />
+        <Healthcare handleLineLogin={handleLineLogin} />
         <Footer />
       </Box>
     </ThemeProvider>
