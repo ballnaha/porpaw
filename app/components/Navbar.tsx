@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Box, Container, Typography, Button, IconButton } from "@mui/material";
-import { PawPrint, ShoppingCart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { DS } from "./DesignSystem";
 
 interface NavbarProps {
@@ -29,31 +30,28 @@ export const Navbar: React.FC<NavbarProps> = ({
       }}
     >
       {/* Brand */}
-      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-        <Typography
-          sx={{
-            fontSize: { xs: "1.4rem", md: "1.7rem" },
-            fontWeight: 900,
-            letterSpacing: "-0.02em",
-            color: DS.ink,
-            display: "flex",
-            alignItems: "center",
-            gap: 0.6,
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Image
+          src="/images/logo.png"
+          alt="Porpaw"
+          width={1191}
+          height={346}
+          priority
+          style={{
+            width: "auto",
+            height: "clamp(30px, 6vw, 42px)",
+            objectFit: "contain",
           }}
-        >
-          Porpaw
-          <PawPrint size={18} color={DS.ink} fill={DS.ink} strokeWidth={2.2} />
-        </Typography>
+        />
         <Typography
           sx={{
             display: { xs: "none", sm: "block" },
-            fontSize: "11px",
+            fontSize: "14px",
             color: DS.gray,
-            fontWeight: 600,
-            ml: 1.5,
+            fontWeight: 400,
           }}
         >
-          Happy pet, Happy life.
+          พ.พาว
         </Typography>
       </Box>
 

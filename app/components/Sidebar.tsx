@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Box } from "@mui/material";
 import {
-  PawPrint,
   Home,
   ShoppingBag,
   Package,
@@ -47,19 +47,27 @@ export const Sidebar: React.FC = () => {
         justifyContent: "space-between",
       }}
     >
-      {/* Logo dot */}
+      {/* Logo */}
       <Box
+        component="a"
+        href="#top"
+        aria-label="Porpaw"
         sx={{
-          width: 49,
-          height: 49,
-          borderRadius: "50%",
-          bgcolor: "#F6B39E",
+          width: 46,
+          height: 46,
           display: "grid",
           placeItems: "center",
           flexShrink: 0,
         }}
       >
-        <PawPrint size={24} color={DS.white} fill={DS.white} strokeWidth={1.8} />
+        <Image
+          src="/images/logo_icon1.png"
+          alt="Porpaw"
+          width={512}
+          height={512}
+          priority
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+        />
       </Box>
 
       {NAV.map(({ icon: Icon, label, href, active }) => (

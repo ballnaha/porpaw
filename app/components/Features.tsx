@@ -49,19 +49,19 @@ export const Features: React.FC = () => {
                 color: "#477B70",
                 fontSize: { xs: 18, md: 19 },
                 fontWeight: 900,
-                lineHeight: 1.05,
+                lineHeight: 1.15,
               }}
             >
-              Subscribe
+              สมัครสมาชิก
               <br />
               <Box component="span" sx={{ color: DS.ink }}>
-                &amp; Save More
+                ยิ่งส่ง ยิ่งคุ้ม
               </Box>
             </Typography>
             <Typography sx={{ mt: 1.5, color: "#56545A", fontSize: 11, lineHeight: 1.7 }}>
-              Flexible plans, pause
+              แผนยืดหยุ่น หยุดหรือ
               <br />
-              or cancel anytime.
+              ยกเลิกได้ทุกเมื่อ
             </Typography>
             <Button
               component="a"
@@ -80,15 +80,15 @@ export const Features: React.FC = () => {
                 "&:hover": { bgcolor: "rgba(255,255,255,.7)" },
               }}
             >
-              View Plans
+              ดูแผน
             </Button>
           </Box>
 
           <Image
-            src="/service_subscription.png"
+            src="/images/box.png"
             alt="กล่อง Subscription สำหรับสัตว์เลี้ยง"
-            width={1024}
-            height={1024}
+            width={512}
+            height={512}
             style={{
               position: "absolute",
               width: "57%",

@@ -38,6 +38,12 @@ body {
   line-height: 1.6;
 }
 
+/* Images shouldn't hijack drag-to-select; text stays selectable */
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
 /* Explicit font helpers to guarantee Kanit font rendering */
 .font-sans {
   font-family: var(--font-kanit), system-ui, sans-serif !important;

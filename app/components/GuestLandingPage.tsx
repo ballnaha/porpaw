@@ -8,7 +8,8 @@ import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 import { Hero } from "./Hero";
 import { Features } from "./Features";
-import { PromoTrio } from "./PromoTrio";
+import { SubscriptionBanner } from "./SubscriptionBanner";
+import { NutritionCalculator } from "./NutritionCalculator";
 import { Places } from "./Places";
 import { Healthcare } from "./Healthcare";
 import { Footer } from "./Footer";
@@ -40,7 +41,8 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
         <Navbar handleLineLogin={handleLineLogin} isConnecting={isConnecting} />
         <Hero handleLineLogin={handleLineLogin} isConnecting={isConnecting} />
         <Features />
-        <PromoTrio handleLineLogin={handleLineLogin} />
+        <SubscriptionBanner handleLineLogin={handleLineLogin} />
+        <NutritionCalculator />
         <Places handleLineLogin={handleLineLogin} />
         <Healthcare handleLineLogin={handleLineLogin} />
         <Footer />

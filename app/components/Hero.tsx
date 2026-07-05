@@ -35,7 +35,7 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
       <Container
         maxWidth="lg"
         sx={{
-          pt: { xs: 5, md: 7 },
+          pt: { xs: 2, md: 3 },
           pb: { xs: 5, md: 3 },
           px: { xs: 2.5, sm: 3, lg: 1 },
         }}
@@ -144,11 +144,12 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
             }}
           >
             <Image
-              src="/images/banner7.webp"
+              src="/images/banner10.png"
               alt="สุนัข แมว และกล่องอาหารสัตว์คุณภาพ"
               width={800}
               height={600}
               priority
+              draggable={false}
               style={{
                 position: "absolute",
                 zIndex: 1,
@@ -158,6 +159,8 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
                 left: "10%",
                 bottom: 0,
                 objectFit: "contain",
+                pointerEvents: "none",
+                userSelect: "none",
               }}
             />
           </Box>
