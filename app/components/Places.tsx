@@ -79,7 +79,7 @@ export const Places: React.FC<PlacesProps> = ({ handleLineLogin }) => {
               mt: 0.35,
               color: DS.ink,
               fontSize: { xs: 22, md: 27 },
-              fontWeight: 900,
+              fontWeight: 700,
               letterSpacing: "-.025em",
             }}
           >

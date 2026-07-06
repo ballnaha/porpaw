@@ -7,21 +7,19 @@ import {
   Home,
   ShoppingBag,
   Package,
-  Gift,
+  Calculator,
   Compass,
   ShieldPlus,
-  User,
 } from "lucide-react";
 import { DS } from "./DesignSystem";
 
 const NAV = [
   { icon: Home, label: "Home", href: "#top", active: true },
   { icon: ShoppingBag, label: "Shop", href: "#features" },
-  { icon: Package, label: "Subscription", href: "#promo" },
-  { icon: Gift, label: "Sets & Gifts", href: "#promo" },
-  { icon: Compass, label: "Explore", href: "#explore" },
-  { icon: ShieldPlus, label: "Vet & Care", href: "#care" },
-  { icon: User, label: "Account", href: "#top" },
+  { icon: Package, label: "Membership", href: "#promo" },
+  { icon: Calculator, label: "Nutrition", href: "#calculator" },
+  { icon: Compass, label: "Places", href: "#explore" },
+  { icon: ShieldPlus, label: "Pet Care", href: "#care" },
 ];
 
 /** Fixed floating rail — desktop only, mirrors the reference sidebar. */

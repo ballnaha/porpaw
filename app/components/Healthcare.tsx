@@ -116,8 +116,8 @@ export const Healthcare: React.FC<HealthcareProps> = ({ handleLineLogin }) => {
             component="h2"
             sx={{
               color: DS.ink,
-              fontSize: { xs: 28, md: 34 },
-              fontWeight: 900,
+              fontSize: { xs: 22, md: 27 },
+              fontWeight: 700,
               letterSpacing: "-.025em",
               lineHeight: 1.2,
             }}

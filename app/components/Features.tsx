@@ -31,14 +31,14 @@ const CATEGORIES = [
   {
     thLabel: "ของเล่น",
     enLabel: "Toys",
-    image: "/images/toy.webp",
+    image: "/images/toy2.webp",
     bg: "#FDF5F1",
     borderColor: "#F9E9E0",
   },
   {
     thLabel: "อุปกรณ์ดูแล",
     enLabel: "Grooming",
-    image: "/images/groom1.webp",
+    image: "/images/groom3.webp",
     bg: "#F3FAF7",
     borderColor: "#E3EFEA",
   },
