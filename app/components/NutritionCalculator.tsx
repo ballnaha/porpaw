@@ -32,13 +32,77 @@ const SPECIES_FACTOR: Record<Species, number> = { dog: 1.6, cat: 1.2 };
 // Average energy density of dry food (kcal per gram)
 const KCAL_PER_GRAM = 3.6;
 
+const NEUTERED_FACTORS: Record<Species, Record<string, number>> = {
+  dog: { intact: 1.0, neutered: 0.85 },
+  cat: { intact: 1.0, neutered: 0.80 },
+};
+
+const MACRO_GRADIENTS: Record<string, { start: string; end: string }> = {
+  protein: { start: "#E27A4D", end: "#FFA07A" },
+  fat: { start: "#D99A2B", end: "#FAD375" },
+  carb: { start: "#2E9B68", end: "#6EE7B7" },
+  fiber: { start: "#8A72BE", end: "#CBB2D6" },
+  vitamin: { start: "#D96A6A", end: "#FFA4A4" },
+};
+
+const getLifeStage = (species: Species, age: number | null) => {
+  if (!age || age <= 0) {
+    return { factor: SPECIES_FACTOR[species], label: "วัยโต (ค่าเริ่มต้น)" };
+  }
+
+  if (species === "dog") {
+    if (age < 4 / 12) return { factor: 3, label: "ลูกสุนัข < 4 เดือน" };
+    if (age < 1) return { factor: 2, label: "ลูกสุนัขกำลังโต" };
+    if (age >= 7) return { factor: 1.4, label: "วัยชรา (7 ปีขึ้นไป)" };
+  }
+
+  if (species === "cat") {
+    if (age < 1) return { factor: 2.5, label: "ลูกแมวกำลังโต" };
+    if (age >= 10) return { factor: 1.1, label: "วัยชรา (10 ปีขึ้นไป)" };
+  }
+
+  return { factor: SPECIES_FACTOR[species], label: "วัยโต" };
+};
+
+// Recommended nutrient split (% of daily intake). Fixed categorical order —
+// each nutrient keeps its own colour across species (colour follows the entity).
+interface Macro {
+  key: string;
+  label: string;
+  pct: number;
+  color: string;
+}
+const MACROS: Record<Species, Macro[]> = {
+  dog: [
+    { key: "protein", label: "โปรตีน", pct: 25, color: "#E27A4D" },
+    { key: "fat", label: "ไขมัน", pct: 15, color: "#D99A2B" },
+    { key: "carb", label: "คาร์โบไฮเดรต", pct: 45, color: "#2E9B68" },
+    { key: "fiber", label: "ไฟเบอร์", pct: 5, color: "#8A72BE" },
+    { key: "vitamin", label: "วิตามิน & แร่ธาตุ", pct: 10, color: "#D96A6A" },
+  ],
+  cat: [
+    { key: "protein", label: "โปรตีน", pct: 40, color: "#E27A4D" },
+    { key: "fat", label: "ไขมัน", pct: 20, color: "#D99A2B" },
+    { key: "carb", label: "คาร์โบไฮเดรต", pct: 28, color: "#2E9B68" },
+    { key: "fiber", label: "ไฟเบอร์", pct: 3, color: "#8A72BE" },
+    { key: "vitamin", label: "วิตามิน & แร่ธาตุ", pct: 9, color: "#D96A6A" },
+  ],
+};
+
+// Donut geometry (viewBox units). Dasharray segments on circles keep the
+// arcs CSS-animatable when the species toggle changes the percentages.
+const DONUT_R = 70;
+const DONUT_STROKE = 26;
+const DONUT_C = 2 * Math.PI * DONUT_R;
+const DONUT_GAP = 2.5; // surface gap between segments
+
 const fieldBase = {
   bgcolor: DS.white,
   border: `1px solid ${DS.line}`,
   borderRadius: "14px",
   px: 2,
-  height: 52,
-  fontSize: 16,
+  height: 44,
+  fontSize: 14,
   fontWeight: 500,
   color: DS.ink,
   width: "100%",
@@ -85,8 +149,8 @@ const Stepper: React.FC<StepperProps> = ({
   };
 
   const btnSx = {
-    width: 34,
-    height: 34,
+    width: 30,
+    height: 30,
     borderRadius: "10px",
     flexShrink: 0,
     display: "grid",
@@ -163,8 +227,14 @@ export const NutritionCalculator: React.FC = () => {
   const [age, setAge] = useState("");
   const [activity, setActivity] = useState("normal");
   const [goal, setGoal] = useState("maintain");
+  const [neutered, setNeutered] = useState("intact");
 
-  const grams = useMemo(() => {
+  // Reset status to intact if species changes
+  React.useEffect(() => {
+    setNeutered("intact");
+  }, [species]);
+
+  const result = useMemo(() => {
     const kg = parseFloat(weight);
     if (!kg || kg <= 0) return null;
 
@@ -172,88 +242,128 @@ export const NutritionCalculator: React.FC = () => {
     const rer = 70 * Math.pow(kg, 0.75);
     const actFactor = ACTIVITY.find((a) => a.value === activity)?.factor ?? 1;
     const goalFactor = GOALS.find((g) => g.value === goal)?.factor ?? 1;
+    const neutFactor = NEUTERED_FACTORS[species][neutered] ?? 1;
+    const parsedAge = parseFloat(age);
+    const lifeStage = getLifeStage(species, Number.isFinite(parsedAge) ? parsedAge : null);
 
-    const kcal = rer * SPECIES_FACTOR[species] * actFactor * goalFactor;
-    return Math.round((kcal / KCAL_PER_GRAM) / 5) * 5; // round to nearest 5g
-  }, [weight, activity, goal, species]);
+    const kcal = Math.round(rer * lifeStage.factor * actFactor * goalFactor * neutFactor);
+    const grams = Math.round((kcal / KCAL_PER_GRAM) / 5) * 5;
+    return { kcal, grams, lifeStage };
+  }, [weight, age, activity, goal, species, neutered]);
+
+  const grams = result?.grams ?? null;
+
+  const macros = MACROS[species];
+
+  // Baselines for food bowl scaling
+  const rer = useMemo(() => {
+    const kg = parseFloat(weight);
+    if (!kg || kg <= 0) return 0;
+    return 70 * Math.pow(kg, 0.75);
+  }, [weight]);
 
   return (
     <Container
       maxWidth="lg"
       id="calculator"
-      sx={{ py: { xs: 3, md: 4 }, px: { xs: 2.5, sm: 3, lg: 1 }, scrollMarginTop: "40px" }}
+      sx={{ py: { xs: 2, md: 2.5 }, px: { xs: 2, sm: 3, lg: 1 }, scrollMarginTop: "40px" }}
     >
       <Box
         sx={{
           position: "relative",
           overflow: "hidden",
-          borderRadius: "32px",
+          borderRadius: "28px",
           background: `linear-gradient(135deg, #FDF6F0 0%, ${DS.peachSoft} 100%)`,
-          p: { xs: 3, md: 4 },
+          p: { xs: 2, md: 2.5 },
           display: "grid",
           gridTemplateColumns: {
             xs: "minmax(0, 1fr)",
-            md: "minmax(0, 1fr) minmax(0, 1fr)",
-            lg: "minmax(0, 0.95fr) minmax(0, 1.1fr) minmax(0, 0.85fr)",
+            md: "minmax(0, 1.05fr) minmax(320px, .95fr)",
+            lg: "minmax(180px, .6fr) minmax(0, 1.1fr) minmax(320px, .95fr)",
           },
           alignItems: { xs: "stretch", lg: "center" },
-          gap: { xs: 3, lg: 2.5 },
+          gap: { xs: 2, md: 2.5 },
         }}
       >
-        {/* ── Left · intro + pet photo ── */}
+        {/* ── Compact heading ── */}
         <Box
           sx={{
+            gridColumn: "1 / -1",
             display: "flex",
-            flexDirection: "column",
-            alignItems: { xs: "center", lg: "flex-start" },
-            textAlign: { xs: "center", lg: "left" },
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            justifyContent: "space-between",
+            gap: 1.5,
+            mb: 0.5,
           }}
         >
-          <Box sx={{ maxWidth: 280 }}>
-            <Box
+          {/* Left side: Icon + Title + Reference Badge */}
+          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+            <PawPrint size={24} color={DS.mintDeep} fill={DS.mintDeep} strokeWidth={1.6} />
+            <Typography
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: { xs: "center", lg: "flex-start" },
-                gap: 1,
-                mb: 1,
+                fontSize: { xs: 24, md: 28 },
+                fontWeight: 700,
+                color: DS.ink,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
               }}
             >
-              <PawPrint size={24} color={DS.mintDeep} fill={DS.mintDeep} strokeWidth={1.6} />
-              <Typography
-                sx={{
-                  fontSize: { xs: 28, md: 33 },
-                  fontWeight: 700,
-                  color: DS.ink,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.15,
-                }}
-              >
-                คำนวณสารอาหาร
-              </Typography>
-            </Box>
-            <Typography sx={{ fontSize: 16, color: "#6b5f59", fontWeight: 400, lineHeight: 1.6 }}>
-              รู้ปริมาณอาหารที่พอดีสำหรับเค้าใน 10 วินาที
+              คำนวณสารอาหาร
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: 12,
+                color: DS.gray,
+                fontWeight: 500,
+                ml: { xs: 0, sm: 0.5 },
+                bgcolor: "rgba(43,43,51,.06)",
+                px: 1,
+                py: 0.3,
+                borderRadius: "6px",
+              }}
+            >
+              อ้างอิงเกณฑ์ AAFCO & WSAVA
             </Typography>
           </Box>
 
+          {/* Right side: Subtitle */}
+          <Typography
+            sx={{
+              fontSize: 13.5,
+              color: "#6b5f59",
+              fontWeight: 500,
+              mt: { xs: 0.5, sm: 0 },
+              alignSelf: { xs: "flex-start", sm: "center" },
+            }}
+          >
+            รู้ปริมาณอาหารที่พอดีสำหรับเค้าใน 10 วินาที
+          </Typography>
+        </Box>
+
+        {/* ── Pet image · one dedicated grid column ── */}
+        <Box
+          sx={{
+            display: "grid",
+            placeItems: "center",
+            gridColumn: { xs: "1", md: "1 / -1", lg: "auto" },
+            minHeight: { xs: 130, md: 160, lg: 0 },
+          }}
+        >
           <Box
             sx={{
               position: "relative",
-              width: { xs: 240, md: 300 },
-              height: { xs: 240, md: 300 },
-              mt: { xs: 1, lg: -1 },
-              ml: { lg: -3 },
-              mb: { lg: -6 },
-              zIndex: 1,
+              width: { xs: 150, md: 190, lg: "100%" },
+              maxWidth: 230,
+              height: { xs: 130, md: 160, lg: 260 },
               pointerEvents: "none",
             }}
           >
             <Image
-              src="/images/calculate.png"
-              alt="สัตว์เลี้ยงกับชามอาหาร"
+              src={species === "cat" ? "/images/nutrition_cat.webp" : "/images/nutrition_dog.webp"}
+              alt={species === "cat" ? "แมวกับชามอาหาร" : "สุนัขกับชามอาหาร"}
               fill
-              sizes="300px"
+              sizes="(min-width: 1200px) 230px, 190px"
               style={{ objectFit: "contain", mixBlendMode: "multiply" }}
             />
           </Box>
@@ -264,7 +374,7 @@ export const NutritionCalculator: React.FC = () => {
           sx={{
             bgcolor: "rgba(255,255,255,.55)",
             borderRadius: "22px",
-            p: { xs: 2.5, md: 3 },
+            p: { xs: 2, md: 2.25 },
           }}
         >
           {/* Species toggle */}
@@ -276,7 +386,7 @@ export const NutritionCalculator: React.FC = () => {
               p: 0.5,
               bgcolor: DS.peachSoft,
               borderRadius: DS.radius.pill,
-              mb: 2.25,
+              mb: 1.5,
             }}
           >
             {(["dog", "cat"] as Species[]).map((s) => (
@@ -287,7 +397,7 @@ export const NutritionCalculator: React.FC = () => {
                 tabIndex={0}
                 onKeyDown={(e) => e.key === "Enter" && setSpecies(s)}
                 sx={{
-                  py: 1.25,
+                  py: 0.8,
                   textAlign: "center",
                   borderRadius: DS.radius.pill,
                   fontSize: 16,
@@ -306,7 +416,7 @@ export const NutritionCalculator: React.FC = () => {
           </Box>
 
           {/* Weight + Age */}
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.75, mb: 1.75 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.25, mb: 1.25 }}>
             <Box>
               <Typography component="label" sx={labelSx}>น้ำหนัก</Typography>
               <Stepper
@@ -324,7 +434,8 @@ export const NutritionCalculator: React.FC = () => {
                 value={age}
                 onChange={setAge}
                 unit="ปี"
-                step={1}
+                step={0.1}
+                min={0.1}
                 max={30}
                 ariaLabel="อายุ (ปี)"
               />
@@ -332,7 +443,7 @@ export const NutritionCalculator: React.FC = () => {
           </Box>
 
           {/* Activity + Goal */}
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.75 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.25 }}>
             <Box>
               <Typography component="label" sx={labelSx}>ระดับกิจกรรม</Typography>
               <Select
@@ -366,60 +477,297 @@ export const NutritionCalculator: React.FC = () => {
               </Select>
             </Box>
           </Box>
+
+          {/* Row 3: Neutered Status */}
+          <Box sx={{ mt: 1.5 }}>
+            <Typography component="label" sx={labelSx}>สถานะทำหมัน</Typography>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 0.5,
+                p: 0.5,
+                bgcolor: DS.peachSoft,
+                borderRadius: "14px",
+                height: 44,
+                alignItems: "center",
+              }}
+            >
+              {[
+                { value: "intact", label: "ยังไม่ทำหมัน" },
+                { value: "neutered", label: "ทำหมันแล้ว" },
+              ].map((item) => {
+                const active = neutered === item.value;
+                return (
+                  <Box
+                    key={item.value}
+                    onClick={() => setNeutered(item.value)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && setNeutered(item.value)}
+                    sx={{
+                      py: 0.6,
+                      textAlign: "center",
+                      borderRadius: "10px",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      transition: "all .2s",
+                      bgcolor: active ? DS.peach : "transparent",
+                      color: active ? DS.white : "#9a8a82",
+                      boxShadow: active ? "0 4px 10px rgba(245,153,127,.2)" : "none",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      "&:focus-visible": { outline: `2px solid ${DS.peach}`, outlineOffset: 2 },
+                    }}
+                  >
+                    {item.label}
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
         </Box>
 
-        {/* ── Right · result ── */}
+        {/* ── Right · result + nutrient breakdown ── */}
         <Box
           sx={{
             bgcolor: DS.white,
             borderRadius: "22px",
-            p: { xs: 2.75, md: 3 },
-            textAlign: "center",
+            p: { xs: 2, md: 2.25 },
             boxShadow: "0 14px 34px rgba(43,43,51,.08)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
           }}
         >
+          {/* Top section: Calories on Left, Gauge on Right */}
           <Box
             sx={{
-              width: 108,
-              height: 82,
-              mx: "auto",
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1.5,
               mb: 1.75,
-              position: "relative",
             }}
           >
-            <Image
-              src="/images/snack.png"
-              alt="ชามอาหารสัตว์เลี้ยง"
-              fill
-              sizes="108px"
-              style={{ objectFit: "contain" }}
-            />
+            {/* Daily Food Amount info */}
+            <Box sx={{ textAlign: { xs: "center", sm: "left" }, flex: 1 }}>
+              <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: DS.gray, mb: 0.25 }}>
+                Daily Food Amount
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: { xs: 28, md: 32 },
+                  fontWeight: 800,
+                  color: DS.ink,
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {result ? `${result.grams.toLocaleString()}` : "0"}{" "}
+                <Box component="span" sx={{ fontSize: 15, fontWeight: 600, color: DS.gray }}>
+                  g
+                </Box>
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: DS.gray, fontWeight: 500, mt: 0.5 }}>
+                {result
+                  ? `ความต้องการพลังงาน: ${result.kcal.toLocaleString()} kcal`
+                  : "กรอกข้อมูลสุนัข/แมวเพื่อคำนวณ"}
+              </Typography>
+              {result && (
+                <Typography sx={{ fontSize: 11, color: DS.gray, fontWeight: 400, mt: 0.1 }}>
+                  ({result.lifeStage.label})
+                </Typography>
+              )}
+            </Box>
+
+            {/* 5-Capsule Nutrient Tubes */}
+            <Box
+              sx={{
+                width: 150,
+                height: 140,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  width: "100%",
+                  height: 110,
+                  px: 0.5,
+                }}
+              >
+                {macros.map((m) => {
+                  const fillPct = result ? Math.max(12, m.pct * 1.8) : 0;
+                  const grad = MACRO_GRADIENTS[m.key] || { start: m.color, end: m.color };
+                  const labels: Record<string, string> = {
+                    protein: "โปร",
+                    fat: "ไข",
+                    carb: "คาร์บ",
+                    fiber: "ใย",
+                    vitamin: "วิท",
+                  };
+                  return (
+                    <Box
+                      key={m.key}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        flex: 1,
+                        mx: 0.5,
+                      }}
+                    >
+                      {/* Glass Capsule Outer Container */}
+                      <Box
+                        sx={{
+                          width: 14,
+                          height: 90,
+                          borderRadius: "10px",
+                          backgroundColor: "rgba(244, 241, 236, 0.8)",
+                          border: "1.5px solid rgba(226, 220, 213, 0.8)",
+                          position: "relative",
+                          overflow: "hidden",
+                          boxShadow: "inset 0 1px 3px rgba(0,0,0,0.03)",
+                        }}
+                      >
+                        {/* Nutrient Glowing Fill */}
+                        <Box
+                          sx={{
+                            width: "100%",
+                            height: `${fillPct}%`,
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            background: `linear-gradient(to top, ${grad.start}, ${grad.end})`,
+                            borderRadius: "8px",
+                            transition: "height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                          }}
+                        />
+                        {/* Glass Glossy Highlight reflection */}
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: "8%",
+                            left: "2px",
+                            width: "2px",
+                            height: "84%",
+                            background: "linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(255,255,255,0))",
+                            borderRadius: "1px",
+                            pointerEvents: "none",
+                          }}
+                        />
+                      </Box>
+                      {/* Tiny Tag Label */}
+                      <Typography
+                        sx={{
+                          fontSize: 9.5,
+                          fontWeight: 700,
+                          color: DS.gray,
+                          mt: 0.75,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {labels[m.key]}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
           </Box>
-          <Typography sx={{ fontSize: 17, fontWeight: 600, color: DS.ink }}>
-            ปริมาณต่อวัน
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: DS.gray, fontWeight: 400, mt: 0.35 }}>
-            ปริมาณที่แนะนำ
-          </Typography>
+
+          {/* Divider and Nutrient Ratio */}
+          <Box sx={{ borderTop: "1px solid rgba(43,43,51,.08)", pt: 1.5, mb: 1.5 }}>
+            <Typography
+              sx={{
+                fontSize: 13.5,
+                fontWeight: 700,
+                color: DS.ink,
+                mb: 1.25,
+                textAlign: "left",
+              }}
+            >
+              Nutrient Ratio
+            </Typography>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                rowGap: 1,
+                columnGap: 2,
+                textAlign: "left",
+              }}
+            >
+              {macros.map((m) => (
+                <Box
+                  key={m.key}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        bgcolor: m.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        color: DS.ink,
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {m.label}
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, flexShrink: 0 }}>
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: DS.ink }}>
+                      {m.pct}%
+                    </Typography>
+                    {grams && (
+                      <Typography sx={{ fontSize: 10.5, color: DS.gray, fontWeight: 500, ml: 0.25 }}>
+                        ({Math.round((grams * m.pct) / 100)}ก.)
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+
           <Typography
             sx={{
-              fontSize: 56,
-              fontWeight: 700,
-              color: DS.peach,
-              lineHeight: 1.05,
-              mt: 0.75,
-              letterSpacing: "-0.03em",
+              fontSize: 10.5,
+              color: DS.gray,
+              fontWeight: 400,
+              lineHeight: 1.4,
+              textAlign: "left",
+              pt: 1,
             }}
           >
-            {grams ?? "—"}
-          </Typography>
-          <Typography sx={{ fontSize: 15, fontWeight: 500, color: DS.ink, mb: 1.75 }}>
-            กรัม / วัน
-          </Typography>
-          <Typography sx={{ fontSize: 11.5, color: DS.gray, fontWeight: 400, lineHeight: 1.6 }}>
-            *ค่าประมาณเบื้องต้น ควรปรึกษา
-            <br />
-            สัตวแพทย์สำหรับคำแนะนำเฉพาะตัว
+            *คำนวณจากอาหารแห้ง 3.6 kcal/กรัม เป็นค่าเริ่มต้น ควรเทียบฉลากอาหารและปรึกษาสัตวแพทย์
           </Typography>
         </Box>
       </Box>

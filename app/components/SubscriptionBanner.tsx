@@ -176,7 +176,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
           }}
         >
           <Image
-            src="/images/box2.png"
+            src="/images/box4.webp"
             alt="กล่องอาหารและขนมสัตว์เลี้ยง Porpaw"
             fill
             sizes="(max-width: 900px) 300px, 420px"
@@ -202,8 +202,8 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                   border: p.highlight
                     ? `1.5px solid ${DS.peach}`
                     : p.custom
-                    ? `1.5px dashed ${DS.peach}`
-                    : "1.5px solid transparent",
+                      ? `1.5px dashed ${DS.peach}`
+                      : "1.5px solid transparent",
                   p: "15px 18px",
                   display: "flex",
                   alignItems: "center",
@@ -212,8 +212,8 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                   boxShadow: p.highlight
                     ? "0 14px 30px rgba(245,153,127,.18)"
                     : p.custom
-                    ? "none"
-                    : "0 8px 20px rgba(43,43,51,.06)",
+                      ? "none"
+                      : "0 8px 20px rgba(43,43,51,.06)",
                   transition: "transform .2s, box-shadow .2s, border-color .2s",
                   "&:hover": {
                     transform: "translateY(-2px)",
@@ -263,8 +263,8 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                     bgcolor: p.highlight
                       ? DS.peach
                       : p.custom
-                      ? "transparent"
-                      : DS.peachSoft,
+                        ? "transparent"
+                        : DS.peachSoft,
                     border: p.custom ? `1.5px dashed ${DS.peach}` : "none",
                     color: p.highlight ? DS.white : DS.peach,
                   }}

@@ -144,7 +144,7 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
             }}
           >
             <Image
-              src="/images/banner10.png"
+              src="/images/banner11.webp"
               alt="สุนัข แมว และกล่องอาหารสัตว์คุณภาพ"
               width={800}
               height={600}
@@ -153,10 +153,11 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
               style={{
                 position: "absolute",
                 zIndex: 1,
-                width: "90%",
-                maxWidth: "none",
+                width: "100%",
+                maxWidth: "520px",
                 height: "auto",
-                left: "10%",
+                left: "50%",
+                transform: "translateX(-50%)",
                 bottom: 0,
                 objectFit: "contain",
                 pointerEvents: "none",
@@ -182,10 +183,24 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
             <Box key={title} sx={{ display: "flex", alignItems: "center", gap: 1.4 }}>
               <Icon size={34} color="#F49A87" strokeWidth={1.7} />
               <Typography sx={{ color: DS.ink, fontSize: 12.5, lineHeight: 1.45 }}>
-                <Box component="span" sx={{ display: "block", fontWeight: 800 }}>
+                <Box
+                  component="span"
+                  sx={{
+                    display: { xs: "inline", md: "block" },
+                    fontWeight: 800,
+                    mr: { xs: 1, md: 0 }
+                  }}
+                >
                   {title}
                 </Box>
-                <Box component="span" sx={{ color: "#5f5b59", fontWeight: 500 }}>
+                <Box
+                  component="span"
+                  sx={{
+                    color: "#5f5b59",
+                    fontWeight: 500,
+                    display: "inline"
+                  }}
+                >
                   {detail}
                 </Box>
               </Typography>

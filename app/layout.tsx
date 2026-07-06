@@ -3,7 +3,7 @@ import { Kanit, Nunito } from "next/font/google";
 import "./globals.css";
 
 const kanit = Kanit({
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   subsets: ["latin", "thai"],
   variable: "--font-kanit",
   display: "swap",

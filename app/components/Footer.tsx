@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Box, Container, Typography } from "@mui/material";
 import { AtSign, Mail, MessageCircle, PawPrint } from "lucide-react";
 import { DS } from "./DesignSystem";
@@ -8,21 +9,16 @@ const FOOTER_LINKS = [
   { label: "Subscription", href: "#promo" },
   { label: "Places", href: "#explore" },
   { label: "Vet & Care", href: "#care" },
-];
-
-const SUPPORT_LINKS = [
-  { label: "ช่วยเหลือ", href: "#top" },
-  { label: "คำถามที่พบบ่อย", href: "#top" },
   { label: "ติดต่อเรา", href: "mailto:hello@porpaw.co" },
 ];
 
 const linkStyle = {
-  color: "#77737A",
-  fontSize: 12,
+  color: "#8B8B95",
+  fontSize: 12.5,
   fontWeight: 600,
   textDecoration: "none",
   transition: "color .2s",
-  "&:hover": { color: DS.ink },
+  "&:hover": { color: DS.peach },
 } as const;
 
 export const Footer: React.FC = () => {
@@ -30,101 +26,100 @@ export const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        mt: { xs: 2, md: 4 },
-        borderTop: "1px solid #EEEAE7",
-        bgcolor: "#FCFAF8",
+        bgcolor: "#FFF",
+        borderTop: "1px solid #F3EFEF",
+        py: { xs: 4, md: 5 },
       }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 2.5, sm: 3, lg: 1 }, pt: { xs: 4, md: 5 }, pb: 2.5 }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2.5, sm: 3, lg: 1 } }}>
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr 1fr", md: "1.4fr .8fr .8fr 1fr" },
-            gap: { xs: 4, md: 5 },
-            pb: { xs: 4, md: 4.5 },
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 3,
+            pb: 3,
+            borderBottom: "1px solid #F3EFEF",
           }}
         >
-          <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, maxWidth: 280 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
-              <Typography sx={{ color: DS.ink, fontSize: 21, fontWeight: 900, letterSpacing: "-.025em" }}>
-                Porpaw
-              </Typography>
-              <PawPrint size={17} fill={DS.ink} color={DS.ink} strokeWidth={2} />
-            </Box>
-            <Typography sx={{ mt: 1.25, color: "#77737A", fontSize: 12, lineHeight: 1.65 }}>
-              อาหารและบริการที่คัดสรรมาเพื่อสุขภาพและความสุขของสัตว์เลี้ยงทุกตัว
-            </Typography>
+          {/* Logo & Brand Name */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Image
+              src="/images/logo.png"
+              alt="Porpaw"
+              width={1191}
+              height={346}
+              style={{
+                width: "auto",
+                height: "26px",
+                objectFit: "contain",
+              }}
+            />
           </Box>
 
-          <Box>
-            <Typography sx={{ mb: 1.5, color: DS.ink, fontSize: 12, fontWeight: 800 }}>บริการ</Typography>
-            <Box sx={{ display: "grid", gap: 1 }}>
-              {FOOTER_LINKS.map(({ label, href }) => (
-                <Box component="a" href={href} key={label} sx={linkStyle}>
-                  {label}
-                </Box>
-              ))}
-            </Box>
+          {/* Minimal Inline Links */}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: { xs: 2.5, sm: 3.5 },
+            }}
+          >
+            {FOOTER_LINKS.map(({ label, href }) => (
+              <Box component="a" href={href} key={label} sx={linkStyle}>
+                {label}
+              </Box>
+            ))}
           </Box>
 
-          <Box>
-            <Typography sx={{ mb: 1.5, color: DS.ink, fontSize: 12, fontWeight: 800 }}>ช่วยเหลือ</Typography>
-            <Box sx={{ display: "grid", gap: 1 }}>
-              {SUPPORT_LINKS.map(({ label, href }) => (
-                <Box component="a" href={href} key={label} sx={linkStyle}>
-                  {label}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          <Box>
-            <Typography sx={{ mb: 1.5, color: DS.ink, fontSize: 12, fontWeight: 800 }}>ติดตามเรา</Typography>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {[
-                { label: "Social", icon: AtSign },
-                { label: "Chat", icon: MessageCircle },
-                { label: "Email", icon: Mail },
-              ].map(({ label, icon: Icon }) => (
-                <Box
-                  component="a"
-                  href={label === "Email" ? "mailto:hello@porpaw.co" : "#top"}
-                  aria-label={label}
-                  key={label}
-                  sx={{
-                    width: 34,
-                    height: 34,
-                    display: "grid",
-                    placeItems: "center",
-                    border: "1px solid #E6E1DD",
-                    borderRadius: "50%",
-                    color: "#6F6B71",
-                    bgcolor: DS.white,
-                    transition: "color .2s, border-color .2s, transform .2s",
-                    "&:hover": { color: DS.accent, borderColor: DS.peach, transform: "translateY(-2px)" },
-                  }}
-                >
-                  <Icon size={15} strokeWidth={1.8} />
-                </Box>
-              ))}
-            </Box>
+          {/* Social Icons */}
+          <Box sx={{ display: "flex", gap: 2.5 }}>
+            {[
+              { label: "Social", icon: AtSign, href: "#top" },
+              { label: "Chat", icon: MessageCircle, href: "#top" },
+              { label: "Email", icon: Mail, href: "mailto:hello@porpaw.co" },
+            ].map(({ label, icon: Icon, href }) => (
+              <Box
+                component="a"
+                href={href}
+                aria-label={label}
+                key={label}
+                sx={{
+                  color: "#8B8B95",
+                  transition: "all .2s ease",
+                  display: "inline-flex",
+                  "&:hover": { color: DS.peach, transform: "translateY(-1px)" },
+                }}
+              >
+                <Icon size={17} strokeWidth={2} />
+              </Box>
+            ))}
           </Box>
         </Box>
 
+        {/* Bottom copyright */}
         <Box
           sx={{
-            pt: 2.25,
-            borderTop: "1px solid #EEEAE7",
+            pt: 3,
             display: "flex",
-            flexWrap: "wrap",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: "center",
             justifyContent: "space-between",
             gap: 1.5,
           }}
         >
-          <Typography sx={{ color: "#98949A", fontSize: 10.5 }}>© 2026 Porpaw. All rights reserved.</Typography>
-          <Box sx={{ display: "flex", gap: 2 }}>
-            <Box component="a" href="#top" sx={{ ...linkStyle, fontSize: 10.5 }}>นโยบายความเป็นส่วนตัว</Box>
-            <Box component="a" href="#top" sx={{ ...linkStyle, fontSize: 10.5 }}>ข้อกำหนดการใช้งาน</Box>
+          <Typography sx={{ color: "#A1A1AA", fontSize: 11 }}>
+            © 2026 Porpaw. All rights reserved.
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2.5 }}>
+            <Box component="a" href="#top" sx={{ ...linkStyle, fontSize: 11, fontWeight: 500 }}>
+              นโยบายความเป็นส่วนตัว
+            </Box>
+            <Box component="a" href="#top" sx={{ ...linkStyle, fontSize: 11, fontWeight: 500 }}>
+              ข้อกำหนดการใช้งาน
+            </Box>
           </Box>
         </Box>
       </Container>

@@ -15,7 +15,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#322B24] flex flex-col w-full antialiased font-sans select-none pb-12 sm:pb-0">
+    <div className="min-h-screen bg-white text-[#322B24] flex flex-col w-full antialiased font-sans pb-12 sm:pb-0">
       
       <GuestLandingPage
         handleLineLogin={handleLineLogin}

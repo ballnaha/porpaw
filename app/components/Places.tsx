@@ -2,38 +2,50 @@
 
 import React from "react";
 import Image from "next/image";
-import { Box, Button, Container, Typography } from "@mui/material";
-import { ArrowRight, Bookmark, MapPin } from "lucide-react";
+import { Box, Button, Container, Typography, Tooltip, Chip } from "@mui/material";
+import { ArrowRight, Bookmark, MapPin, Waves, Trees, Coffee, Snowflake, Hotel } from "lucide-react";
 import { DS } from "./DesignSystem";
 
 interface PlacesProps {
   handleLineLogin: () => void;
 }
 
+const FACILITY_MAP: Record<string, { icon: React.ComponentType<any>; label: string }> = {
+  pool: { icon: Waves, label: "มีสระว่ายน้ำ" },
+  lawn: { icon: Trees, label: "มีสนามหญ้า/สวน" },
+  cafe: { icon: Coffee, label: "มีคาเฟ่ให้บริการ" },
+  air: { icon: Snowflake, label: "โซนห้องแอร์" },
+  hotel: { icon: Hotel, label: "มีบริการที่พักสัตว์เลี้ยง" },
+};
+
 const PLACES = [
   {
-    type: "Pet Friendly Cafe",
-    title: "Paw Around Cafe",
+    type: "คาเฟ่ Pet Friendly",
+    title: "CRAFT คิมป์ตัน มาลัย",
     province: "กรุงเทพฯ",
-    img: "/place_travel.png",
+    img: "/images/place4.png",
+    facilities: ["cafe", "air"],
   },
   {
     type: "ที่เที่ยวธรรมชาติ",
-    title: "Dog Hill",
+    title: "อ่างเก็บน้ำห้วยตึงเฒ่า",
     province: "เชียงใหม่",
-    img: "/service_places.png",
+    img: "/images/place2.png",
+    facilities: ["lawn"],
   },
   {
-    type: "Pet Friendly Hotel",
-    title: "The Barkley Lodge",
+    type: "โรงแรม Pet Friendly",
+    title: "อินเตอร์คอนติเนนตัล หัวหิน",
     province: "หัวหิน",
-    img: "/place_hotel.png",
+    img: "/images/place3.png",
+    facilities: ["pool", "air", "hotel"],
   },
   {
-    type: "กิจกรรม",
-    title: "Pet Swimming Club",
-    province: "กรุงเทพฯ",
-    img: "/place_travel.png",
+    type: "กิจกรรม / ชายหาด",
+    title: "หาดดงตาล พัทยา",
+    province: "ชลบุรี",
+    img: "/images/place1.png",
+    facilities: ["pool", "lawn"],
   },
 ];
 
@@ -83,10 +95,12 @@ export const Places: React.FC<PlacesProps> = ({ handleLineLogin }) => {
             bgcolor: "#FFF7F3",
             border: "1px solid #F4DED4",
             borderRadius: DS.radius.pill,
-            px: { xs: 1.75, sm: 2.25 },
-            py: 0.85,
-            fontSize: { xs: 10.5, sm: 12 },
-            "&:hover": { bgcolor: "#FDEDE6", borderColor: DS.peach },
+            px: { xs: 2, sm: 2.75 },
+            py: { xs: 0.85, sm: 1 },
+            fontSize: { xs: 11.5, sm: 13 },
+            fontWeight: 600,
+            transition: "all .3s ease",
+            "&:hover": { bgcolor: "#FDEDE6", borderColor: DS.peach, transform: "translateY(-1.5px)" },
           }}
         >
           ดูสถานที่ทั้งหมด
@@ -97,14 +111,14 @@ export const Places: React.FC<PlacesProps> = ({ handleLineLogin }) => {
         sx={{
           display: "grid",
           gridTemplateColumns: {
-            xs: "minmax(0, 1fr)",
+            xs: "repeat(2, minmax(0, 1fr))",
             sm: "repeat(2, minmax(0, 1fr))",
             lg: "repeat(4, minmax(0, 1fr))",
           },
-          gap: { xs: 2, md: 2.25 },
+          gap: { xs: 1.5, sm: 2, md: 2.25 },
         }}
       >
-        {PLACES.map(({ type, title, province, img }) => (
+        {PLACES.map(({ type, title, province, img, facilities }) => (
           <Box
             component="button"
             type="button"
@@ -116,7 +130,7 @@ export const Places: React.FC<PlacesProps> = ({ handleLineLogin }) => {
               p: 0,
               overflow: "hidden",
               border: "1px solid #EEEAE7",
-              borderRadius: "18px",
+              borderRadius: { xs: "16px", md: "18px" },
               bgcolor: "#FFFEFC",
               color: DS.ink,
               fontFamily: "inherit",
@@ -132,46 +146,122 @@ export const Places: React.FC<PlacesProps> = ({ handleLineLogin }) => {
               "&:focus-visible": { outline: `2px solid ${DS.peach}`, outlineOffset: 3 },
             }}
           >
-            <Box sx={{ position: "relative", height: { xs: 145, md: 104 }, overflow: "hidden" }}>
+            <Box sx={{ position: "relative", width: "100%", aspectRatio: "16/10", overflow: "hidden" }}>
               <Image
                 src={img}
                 alt={title}
                 fill
-                sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                sizes="(max-width: 600px) 50vw, (max-width: 1200px) 50vw, 25vw"
                 style={{ objectFit: "cover", transition: "transform .3s" }}
               />
               <Box
                 sx={{
                   position: "absolute",
-                  left: 9,
-                  bottom: -1,
-                  px: 1.1,
-                  py: 0.35,
-                  bgcolor: "rgba(255,248,242,.96)",
-                  borderRadius: "8px 8px 0 0",
-                  color: "#6E6865",
-                  fontSize: 9.5,
-                  fontWeight: 600,
-                  lineHeight: 1.2,
+                  top: { xs: 8, md: 12 },
+                  left: { xs: 8, md: 12 },
+                  zIndex: 2,
                 }}
               >
-                {type}
+                <Chip
+                  label={type}
+                  size="small"
+                  sx={{
+                    bgcolor: "rgba(255, 255, 255, 0.9)",
+                    color: DS.peach,
+                    fontWeight: 500,
+                    fontSize: { xs: 9.5, md: 11 },
+                    backdropFilter: "blur(4px)",
+                    border: "1px solid #FFEBE5",
+                    borderRadius: "100px",
+                    height: { xs: 22, md: 26 },
+                    px: { xs: 0.75, md: 1.25 },
+                  }}
+                />
               </Box>
             </Box>
 
-            <Box sx={{ position: "relative", px: 1.5, pt: 1.25, pb: 1.35, minHeight: 70 }}>
-              <Typography sx={{ pr: 3, fontSize: 13, fontWeight: 800, lineHeight: 1.25 }}>
-                {title}
-              </Typography>
-              <Box sx={{ mt: 0.75, display: "flex", alignItems: "center", gap: 0.45, color: DS.gray }}>
-                <MapPin size={12} color="#F28F7C" fill="#F28F7C" strokeWidth={1.5} />
-                <Typography sx={{ fontSize: 10, fontWeight: 500 }}>{province}</Typography>
+            <Box
+              sx={{
+                position: "relative",
+                px: { xs: 1.25, md: 1.5 },
+                pt: 1.5,
+                pb: 1.5,
+                minHeight: { xs: 105, md: 118 },
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <Box>
+                <Typography
+                  sx={{
+                    pr: 3.25,
+                    fontSize: { xs: 14, md: 16 },
+                    fontWeight: 600,
+                    lineHeight: 1.3,
+                    minHeight: { xs: 36, md: 45 },
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    color: DS.ink,
+                  }}
+                >
+                  {title}
+                </Typography>
+                <Box sx={{ mt: 0.85, display: "flex", alignItems: "center", gap: 0.5, color: "#5C5552" }}>
+                  <MapPin size={13} color="#F28F7C" fill="#F28F7C" strokeWidth={2.0} />
+                  <Typography sx={{ fontSize: { xs: 11, md: 12.5 }, fontWeight: 400 }}>{province}</Typography>
+                </Box>
               </Box>
-              <Bookmark
-                size={17}
-                strokeWidth={1.5}
-                style={{ position: "absolute", top: 14, right: 13, color: "#56535A" }}
-              />
+
+              {/* Facilities Row */}
+              <Box sx={{ display: "flex", gap: 0.75, mt: 1.5, mb: 0 }}>
+                {facilities.map((fac) => {
+                  const info = FACILITY_MAP[fac];
+                  if (!info) return null;
+                  const Icon = info.icon;
+                  return (
+                    <Tooltip key={fac} title={info.label} arrow>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          bgcolor: "#F5F2EF",
+                          color: "#4A4340",
+                          border: "1px solid #E5DFD9",
+                          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                          "&:hover": {
+                            bgcolor: DS.peach,
+                            color: "#FFFFFF",
+                            borderColor: DS.peach,
+                            transform: "scale(1.12)",
+                            boxShadow: "0 4px 10px rgba(239, 145, 124, 0.25)",
+                          },
+                        }}
+                      >
+                        <Icon size={14} strokeWidth={2.2} />
+                      </Box>
+                    </Tooltip>
+                  );
+                })}
+              </Box>
+
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: { xs: 14, md: 16 },
+                  right: { xs: 8, md: 13 },
+                  color: "#56535A",
+                  display: "flex",
+                }}
+              >
+                <Bookmark size={17} strokeWidth={1.8} />
+              </Box>
             </Box>
           </Box>
         ))}
