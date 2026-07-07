@@ -1,0 +1,70 @@
+.packageCard {
+  position: relative;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--package-accent) 24%, #dedede) !important;
+}
+
+.packageCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--package-accent);
+  opacity: 0.55;
+}
+
+.packageSelected {
+  border-color: var(--package-accent) !important;
+  background: linear-gradient(90deg, var(--package-tint), #fff 72%) !important;
+  box-shadow: 0 5px 16px color-mix(in srgb, var(--package-accent) 14%, transparent);
+}
+
+.packageSelected::before {
+  opacity: 1;
+}
+
+.packageImage {
+  overflow: hidden;
+  border-radius: 12px;
+  background: transparent;
+}
+
+.packageImage img {
+  transform: scale(0.92);
+}
+
+.packageRadio {
+  border-color: color-mix(in srgb, var(--package-accent) 52%, #d6d7d9) !important;
+}
+
+.packageSelected .packageRadio {
+  border-color: var(--package-accent) !important;
+}
+
+.packageSelected .packageRadio i {
+  background: var(--package-accent) !important;
+}
+
+.packageSelected h3 {
+  color: color-mix(in srgb, var(--package-accent) 76%, #20232b);
+}
+
+.selectedPackage {
+  width: fit-content;
+  display: block;
+  margin: 10px auto 5px;
+  padding: 6px 15px;
+  border: 1px solid color-mix(in srgb, var(--package-accent) 45%, transparent);
+  border-radius: 999px;
+  background: var(--package-tint);
+  color: color-mix(in srgb, var(--package-accent) 82%, #252832);
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.selectedFocus {
+  display: block;
+  color: #666b74 !important;
+  font-size: 12px !important;
+}

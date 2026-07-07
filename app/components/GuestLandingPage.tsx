@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Box } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme, DS } from "./DesignSystem";
@@ -23,6 +23,9 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
   handleLineLogin,
   isConnecting,
 }) => {
+  const [calculatedGrams, setCalculatedGrams] = useState<number | null>(null);
+  const [species, setSpecies] = useState<"dog" | "cat">("dog");
+
   return (
     <ThemeProvider theme={theme}>
       {/* Fixed rail — desktop only */}
@@ -41,8 +44,17 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
         <Navbar handleLineLogin={handleLineLogin} isConnecting={isConnecting} />
         <Hero handleLineLogin={handleLineLogin} isConnecting={isConnecting} />
         <Features />
-        <SubscriptionBanner handleLineLogin={handleLineLogin} />
-        <NutritionCalculator />
+        <NutritionCalculator
+          onCalculate={(grams, sp) => {
+            setCalculatedGrams(grams);
+            setSpecies(sp);
+          }}
+        />
+        <SubscriptionBanner
+          handleLineLogin={handleLineLogin}
+          calculatedGrams={calculatedGrams}
+          species={species}
+        />
         <Places handleLineLogin={handleLineLogin} />
         <Healthcare handleLineLogin={handleLineLogin} />
         <Footer />

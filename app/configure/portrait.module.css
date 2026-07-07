@@ -1,0 +1,49 @@
+.dogPortrait {
+  overflow: hidden;
+}
+
+.dogPortrait img {
+  object-fit: contain !important;
+  object-position: center center !important;
+  padding-top:10px;
+  transform: scale(1);
+  transform-origin: center center;
+}
+
+.catPortrait {
+  overflow: hidden;
+}
+
+.catPortrait img {
+  object-fit: contain !important;
+  object-position: top center !important;
+  padding-top:10px;
+  transform: scale(1);
+  transform-origin: top center;
+}
+
+.speciesRadio {
+  position: absolute;
+  top: 111px;
+  left: 16px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #d4d6d8;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 2px 7px rgba(36, 39, 45, 0.1);
+}
+
+.speciesRadioSelected {
+  border-color: #ff966b;
+}
+
+.speciesRadioSelected i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ff966b;
+}

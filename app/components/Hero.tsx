@@ -14,8 +14,8 @@ interface HeroProps {
 const BENEFITS = [
   {
     icon: Truck,
-    title: "จัดส่งรวดเร็ว",
-    detail: "ภายใน 1–2 วัน",
+    title: "ค่าส่งโปร่งใส",
+    detail: "แจ้งก่อนชำระทุกครั้ง",
   },
   {
     icon: PackageCheck,
@@ -24,8 +24,8 @@ const BENEFITS = [
   },
   {
     icon: CalendarDays,
-    title: "Subscription",
-    detail: "สะดวก ประหยัด ไม่ขาด",
+    title: "รอบส่งควบคุมได้",
+    detail: "ปรับ/เลื่อนผ่าน LINE ได้เสมอ",
   },
 ];
 
@@ -93,7 +93,7 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
             >
               คัดสรรอาหารคุณภาพ ส่งไวทั่วไทย
               <br />
-              พร้อมบริการ Subscription ที่ออกแบบมาเพื่อเค้าโดยเฉพาะ
+              พร้อมจัดปริมาณและรอบส่งให้พอดีกับเค้า ไม่ซื้อเกินจำเป็น
             </Typography>
 
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.75, mt: 3.5 }}>

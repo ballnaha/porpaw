@@ -72,12 +72,11 @@ export const Features: React.FC = () => {
         <Box
           sx={{
             position: "relative",
-            height: "100%",
-            minHeight: { xs: 160, sm: 175 },
+            height: { xs: 160, md: 175 },
             overflow: "hidden",
             borderRadius: "28px",
             bgcolor: "#DCEDE8",
-            p: { xs: 2.25, md: 3 },
+            p: { xs: 2, md: 2.25 },
           }}
         >
           <Box sx={{ position: "relative", zIndex: 2, maxWidth: 145 }}>
@@ -89,23 +88,23 @@ export const Features: React.FC = () => {
                 lineHeight: 1.15,
               }}
             >
-              จัดส่งรวดเร็ว
+              รวมส่งครั้งเดียว
               <br />
               <Box component="span" sx={{ color: DS.ink }}>
-                ยิ่งส่ง ยิ่งคุ้ม
+                คุ้มทุกกล่อง
               </Box>
             </Typography>
-            <Typography sx={{ mt: 1.5, color: "#56545A", fontSize: 11, lineHeight: 1.7 }}>
-              ส่งด่วนถึงหน้าบ้านทั่วไทย
+            <Typography sx={{ mt: 1, color: "#56545A", fontSize: 10.5, lineHeight: 1.55 }}>
+              รวมอาหารและของใช้พร้อมกัน
               <br />
-              ภายใน 1–2 วันทำการ
+              ค่าส่งชัดเจนก่อนชำระ
             </Typography>
             <Button
               component="a"
               href="#explore"
               endIcon={<ArrowRight size={13} />}
               sx={{
-                mt: 1.75,
+                mt: 1.25,
                 minWidth: 104,
                 px: 1.75,
                 py: 0.7,
@@ -117,7 +116,7 @@ export const Features: React.FC = () => {
                 "&:hover": { bgcolor: "rgba(255,255,255,.7)" },
               }}
             >
-              ดูข้อมูลจัดส่ง
+              ดูรอบจัดส่ง
             </Button>
           </Box>
 

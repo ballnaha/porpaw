@@ -3,42 +3,48 @@
 import React from "react";
 import Image from "next/image";
 import { Box, Container, Typography, Button } from "@mui/material";
-import { Check, ArrowRight, Sparkles, Crown, Gem, SlidersHorizontal } from "lucide-react";
+import { Check, ArrowRight, CalendarClock, PackageCheck, CalendarRange, SlidersHorizontal } from "lucide-react";
 import { DS } from "./DesignSystem";
 
 interface SubscriptionBannerProps {
   handleLineLogin: () => void;
+  calculatedGrams?: number | null;
+  species?: "dog" | "cat";
 }
 
-const CHECKS = ["ประหยัดสูงสุด 20%", "ส่งฟรีทุกกล่อง", "ยืดหยุ่น ไม่ผูกมัด"];
+const CHECKS = [
+  "สะสมแต้มทุกกล่อง ยิ่งอยู่นานสิทธิพิเศษยิ่งเพิ่มขึ้น",
+  "สั่งต่อเนื่องครบ 3 รอบ รับของขวัญพรีเมียมเฉพาะตัว",
+  "แจ้งเตือนก่อนส่ง เลื่อนวันหรือปรับสูตรได้ตลอดผ่าน LINE",
+];
 
 const PLANS = [
   {
-    icon: Sparkles,
+    icon: CalendarClock,
     badge: null,
-    title: "Starter",
-    detail: "เหมาะสำหรับเริ่มต้นทดลอง",
-    save: "ประหยัด 5%",
+    title: "Paw-Lite",
+    detail: "รอบส่งทุก 15 วัน · อาหารสดใหม่ไม่ค้างกระสอบ เหมาะสำหรับเริ่มต้น",
+    save: "ชิมลาง",
     saveColor: DS.mintDeep,
     highlight: false,
     custom: false,
   },
   {
-    icon: Crown,
-    badge: "ยอดนิยม",
-    title: "Pawrents' Choice",
-    detail: "คุ้มที่สุดสำหรับดูแลทุกวัน",
-    save: "ประหยัด 15%",
+    icon: PackageCheck,
+    badge: "แนะนำสุดคุ้ม",
+    title: "Paw-Fit",
+    detail: "รอบส่งทุก 30 วัน · ปริมาณพอดีกินจริง 100% หมดกังวลเหลือทิ้ง",
+    save: "ยอดนิยม",
     saveColor: DS.peach,
     highlight: true,
     custom: false,
   },
   {
-    icon: Gem,
+    icon: CalendarRange,
     badge: null,
-    title: "Ultimate Care",
-    detail: "ดูแลครบ ครอบคลุมโภชนาการ",
-    save: "ประหยัด 20%",
+    title: "Paw-Max",
+    detail: "รอบส่งทุก 45 วัน · ขนาดกล่องใหญ่ ลดรอบการส่ง เซฟค่าส่งในระยะยาว",
+    save: "ประหยัดสุด",
     saveColor: DS.mintDeep,
     highlight: false,
     custom: false,
@@ -46,9 +52,9 @@ const PLANS = [
   {
     icon: SlidersHorizontal,
     badge: null,
-    title: "จัดกล่องเอง",
-    detail: "เลือกสินค้าที่เค้าชอบ ส่วนลดตามจริง",
-    save: "ปรับได้",
+    title: "Paw-Mix",
+    detail: "เลือกสินค้า ปริมาณ และความถี่จัดส่งเอง ปรับผ่าน LINE ได้ตลอด",
+    save: "ยืดหยุ่นสูง",
     saveColor: DS.gray,
     highlight: false,
     custom: true,
@@ -57,7 +63,42 @@ const PLANS = [
 
 export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
   handleLineLogin,
+  calculatedGrams,
+  species = "dog",
 }) => {
+  const dynamicPlans = React.useMemo(() => {
+    if (!calculatedGrams) return PLANS;
+
+    return PLANS.map((p) => {
+      if (p.title === "Paw-Lite") {
+        return {
+          ...p,
+          detail: `จัดส่งรอบละ ${(calculatedGrams / 2 / 1000).toFixed(1)} กก. · สดใหม่ไม่ค้างกระสอบ`,
+        };
+      }
+      if (p.title === "Paw-Fit") {
+        return {
+          ...p,
+          detail: `จัดส่งรอบละ ${(calculatedGrams / 1000).toFixed(1)} กก. · พอดีกินจริง 100% ไร้ของเหลือ`,
+        };
+      }
+      if (p.title === "Paw-Max") {
+        return {
+          ...p,
+          detail: `จัดส่งรอบละ ${(calculatedGrams * 1.5 / 1000).toFixed(1)} กก. · ส่งรอบใหญ่ คุ้มค่าส่งที่สุด`,
+        };
+      }
+      return p;
+    });
+  }, [calculatedGrams]);
+
+  const handlePlanClick = (p: typeof PLANS[0]) => {
+    if (typeof window !== "undefined") {
+      const gParam = calculatedGrams ? `&grams=${calculatedGrams}` : "";
+      window.location.href = `/configure?plan=${p.title}&species=${species}${gParam}`;
+    }
+  };
+
   return (
     <Container
       maxWidth="lg"
@@ -75,7 +116,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
           display: "grid",
           gridTemplateColumns: {
             xs: "minmax(0, 1fr)",
-            md: "minmax(0, 1fr) minmax(0, 1.05fr)",
+            md: "minmax(0, 1fr minmax(0, 1.05fr))",
             lg: "minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 0.9fr)",
           },
           alignItems: "center",
@@ -93,7 +134,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
               lineHeight: 1.15,
             }}
           >
-            สมัครสมาชิก ประหยัดกว่า
+            ดูแลต่อเนื่อง ได้มากกว่าทุกกล่อง
           </Typography>
           <Typography
             sx={{
@@ -104,9 +145,9 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
               lineHeight: 1.6,
             }}
           >
-            แผนที่ยืดหยุ่นตามความต้องการของเค้า
+            จัดปริมาณตามที่กินจริง หมดกังวลเรื่องอาหารเหลือทิ้ง (Zero Waste)
             <br />
-            หยุด ข้าม หรือยกเลิกได้ทุกเมื่อ
+            พร้อมสิทธิพิเศษและของขวัญที่เพิ่มขึ้นเมื่อดูแลต่อเนื่อง
           </Typography>
 
           <Box sx={{ display: "grid", gap: 1.1, mt: 2.75 }}>
@@ -134,7 +175,12 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
           </Box>
 
           <Button
-            onClick={handleLineLogin}
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                const gParam = calculatedGrams ? `&grams=${calculatedGrams}` : "";
+                window.location.href = `/configure?plan=Paw-Fit&species=${species}${gParam}`;
+              }
+            }}
             disableElevation
             endIcon={<ArrowRight size={17} strokeWidth={2.5} />}
             sx={{
@@ -156,7 +202,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
               },
             }}
           >
-            ดูแผนทั้งหมด
+            เริ่มเป็นสมาชิก
           </Button>
         </Box>
 
@@ -187,14 +233,14 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
 
         {/* ── Right · plan cards ── */}
         <Box sx={{ display: "grid", gap: 1.25 }}>
-          {PLANS.map((p) => {
+          {dynamicPlans.map((p) => {
             const Icon = p.icon;
             return (
               <Box
                 key={p.title}
-                onClick={p.custom ? handleLineLogin : undefined}
-                role={p.custom ? "button" : undefined}
-                tabIndex={p.custom ? 0 : undefined}
+                onClick={() => handlePlanClick(p)}
+                role="button"
+                tabIndex={0}
                 sx={{
                   position: "relative",
                   bgcolor: p.custom ? "transparent" : DS.white,
@@ -208,7 +254,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                   display: "flex",
                   alignItems: "center",
                   gap: 1.5,
-                  cursor: p.custom ? "pointer" : "default",
+                  cursor: "pointer",
                   boxShadow: p.highlight
                     ? "0 14px 30px rgba(245,153,127,.18)"
                     : p.custom

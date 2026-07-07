@@ -1,0 +1,31 @@
+.readable p {
+  font-size: 14px;
+}
+
+.readable,
+.readable button,
+.readable a,
+.readable input {
+  font-family: var(--font-nunito), var(--font-kanit), system-ui, -apple-system, sans-serif;
+}
+
+.readable small {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.readable button small {
+  font-size: 12px;
+}
+
+.readable button p {
+  font-size: 13px;
+}
+
+@media (max-width: 650px) {
+  .readable p,
+  .readable small,
+  .readable button small {
+    font-size: 11.5px;
+  }
+}
