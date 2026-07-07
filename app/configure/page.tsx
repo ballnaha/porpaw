@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Suspense, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Crown, ShieldCheck, Sparkles, Truck, Phone, RefreshCw } from "lucide-react";
+import { Check, Crown, ShieldCheck, Truck, Phone, RefreshCw } from "lucide-react";
 import styles from "./configure.module.css";
 import portraitStyles from "./portrait.module.css";
 import readabilityStyles from "./readability.module.css";
@@ -14,19 +14,19 @@ import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "../components/DesignSystem";
 
 const plans = [
-  { name: "Paw-Lite", detail: "ครบทุกมื้อ อร่อยได้ทุกวัน", price: 1590, daily: 53, image: "/images/package-lite.png", features: ["อาหารหลักคุณภาพสูง", "ขนมเพื่อสุขภาพ", "ส่งฟรีทั่วประเทศ"], badge: "ยอดนิยม", accent: "#f28b5b", tint: "#fff2e9", imageTint: "#ffe3d2" },
-  { name: "Paw-Fit", detail: "ควบคุมน้ำหนัก สุขภาพดี", price: 1890, daily: 63, image: "/images/package-fit.png", features: ["ลดไขมัน", "โปรตีนคุณภาพ", "ช่วยควบคุมน้ำหนัก"], accent: "#64a77b", tint: "#eef8f0", imageTint: "#dff1e4" },
-  { name: "Paw-Max", detail: "บำรุงครบ จบในแพ็กเดียว", price: 2290, daily: 76, image: "/images/package-max.png", features: ["เสริมภูมิ", "ขนเงาสวย", "ข้อ & กระดูกแข็งแรง"], badge: "ประหยัดที่สุด", accent: "#7774b9", tint: "#f2f1fb", imageTint: "#e5e3f7" },
-  { name: "Paw-Mix", detail: "เลือกสินค้าเองได้ ตามใจน้อง", price: 1290, daily: 43, image: "/images/package-mix.png", features: ["อิสระเลือกสินค้า", "ยืดหยุ่น", "ปรับเปลี่ยนได้ทุกเดือน"], accent: "#d39a32", tint: "#fff8e7", imageTint: "#f8edc9" },
+  { name: "Paw-Lite", detail: "ครบทุกมื้อ อร่อยได้ทุกวัน", price: 1590, daily: 53, image: "/images/paw-lite1.webp", features: ["อาหารหลักคุณภาพสูง", "ขนมเพื่อสุขภาพ", "ส่งฟรีทั่วประเทศ"], badge: "ยอดนิยม", accent: "#f28b5b", tint: "#fff2e9", imageTint: "#ffe3d2" },
+  { name: "Paw-Fit", detail: "ควบคุมน้ำหนัก สุขภาพดี", price: 1890, daily: 63, image: "/images/paw-fit1.webp", features: ["ลดไขมัน", "โปรตีนคุณภาพ", "ช่วยควบคุมน้ำหนัก"], accent: "#64a77b", tint: "#eef8f0", imageTint: "#dff1e4" },
+  { name: "Paw-Max", detail: "บำรุงครบ จบในแพ็กเดียว", price: 2290, daily: 76, image: "/images/paw-max1.webp", features: ["เสริมภูมิ", "ขนเงาสวย", "ข้อ & กระดูกแข็งแรง"], badge: "ประหยัดที่สุด", accent: "#7774b9", tint: "#f2f1fb", imageTint: "#e5e3f7" },
+  { name: "Paw-Mix", detail: "เลือกสินค้าเองได้ ตามใจน้อง", price: 1290, daily: 43, image: "/images/paw-mix.webp", features: ["อิสระเลือกสินค้า", "ยืดหยุ่น", "ปรับเปลี่ยนได้ทุกเดือน"], accent: "#d39a32", tint: "#fff8e7", imageTint: "#f8edc9" },
 ];
 
 const focuses = [
-  ["สุขภาพผิวหนัง & ขน", "ขนสวย ไม่ร่วง ผิวแข็งแรง", "/images/snack1.webp"],
-  ["บำรุงข้อ & กระดูก", "เคลื่อนไหวคล่องแคล่ว", "/images/toy2.webp"],
-  ["เสริมภูมิคุ้มกัน", "แข็งแรง ไม่ป่วยง่าย", "/images/groom3.webp"],
-  ["ดูแลระบบย่อยอาหาร", "ย่อยง่าย ขับถ่ายเป็นก้อน", "/images/food_dog.webp"],
-  ["หัวใจ & สมอง", "สายตาแจ่มใส สมองไว", "/images/snack1.webp"],
-  ["ลดน้ำหนัก & คุมน้ำหนัก", "หุ่นดี สุขภาพดี", "/images/nutrition_dog.webp"],
+  ["สุขภาพผิวหนัง & ขน", "ขนสวย ไม่ร่วง ผิวแข็งแรง", "/images/skin.webp"],
+  ["บำรุงข้อ & กระดูก", "เคลื่อนไหวคล่องแคล่ว", "/images/bone.webp"],
+  ["เสริมภูมิคุ้มกัน", "แข็งแรง ไม่ป่วยง่าย", "/images/protect1.webp"],
+  ["ดูแลระบบย่อยอาหาร", "ย่อยง่าย ขับถ่ายเป็นก้อน", "/images/food.webp"],
+  ["หัวใจ & สมอง", "สายตาแจ่มใส สมองไว", "/images/heart.webp"],
+  ["ลดน้ำหนัก & คุมน้ำหนัก", "หุ่นดี สุขภาพดี", "/images/diet.webp"],
 ];
 
 function StepTitle({ number, title, subtitle }: { number: number; title: string; subtitle: string }) {
@@ -87,8 +87,6 @@ function Dashboard() {
 
       <aside className={styles.summary}>
         <header>
-          <p><Sparkles size={15} /> WHAT&apos;S IN YOUR BOX</p>
-          <h1>เซ็ตกล่องลายน้อง</h1>
           <strong
             className={packageStyles.selectedPackage}
             style={{ "--package-accent": plan.accent, "--package-tint": plan.tint } as CSSProperties}

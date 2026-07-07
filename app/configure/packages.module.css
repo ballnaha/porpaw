@@ -30,7 +30,7 @@
 }
 
 .packageImage img {
-  transform: scale(0.92);
+  transform: scale(1.12);
 }
 
 .packageRadio {
@@ -52,19 +52,26 @@
 .selectedPackage {
   width: fit-content;
   display: block;
-  margin: 10px auto 5px;
-  padding: 6px 15px;
+  margin: 0 auto 8px;
+  padding: 8px 20px;
   border: 1px solid color-mix(in srgb, var(--package-accent) 45%, transparent);
   border-radius: 999px;
   background: var(--package-tint);
   color: color-mix(in srgb, var(--package-accent) 82%, #252832);
-  font-size: 15px;
+  font-size: 22px;
   line-height: 1.25;
   font-weight: 700;
 }
 
 .selectedFocus {
+  width: fit-content;
   display: block;
-  color: #666b74 !important;
-  font-size: 12px !important;
+  margin: 0 auto;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #fff;
+  color: #4f535b !important;
+  font-size: 18px !important;
+  line-height: 1.35;
+  font-weight: 800;
 }
