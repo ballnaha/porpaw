@@ -12,25 +12,55 @@ import { Footer } from "../components/Footer";
 import { DS, theme } from "../components/DesignSystem";
 import { useCart } from "../components/CartProvider";
 import { MobileBottomNav } from "../components/MobileBottomNav";
-import { PRODUCTS, PRODUCT_BADGE_COLORS, type ProductCategory } from "../lib/productCatalog";
+import { PRODUCTS, PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../lib/productCatalog";
 
 type Category = "ทั้งหมด" | ProductCategory;
 const CATEGORIES: Category[] = ["ทั้งหมด", "อาหารสุนัข", "อาหารแมว", "ขนม", "อาหารเสริม", "ของเล่น", "อุปกรณ์ดูแล", "ที่นอน & บ้าน"];
 
 const lineUrl = "https://line.me/R/ti/p/@porpaw";
 
+function getLinkedCartId(productId: number, packageId: number) {
+  return Array.from(`${productId}|${packageId}|with-package`).reduce(
+    (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
+    2000,
+  );
+}
+
 function ShopContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addItem, recentlyAddedId } = useCart();
+  const { addItem, items, recentlyAddedId } = useCart();
   const requestedCategory = searchParams.get("category");
   const category: Category = CATEGORIES.includes(requestedCategory as Category)
     ? requestedCategory as Category
     : "ทั้งหมด";
   const products = PRODUCTS.filter((product) => category === "ทั้งหมด" || product.category === category);
+  const requestedPackageId = Number(searchParams.get("packageId"));
+  const targetPackage = Number.isFinite(requestedPackageId)
+    ? items.find((item) => item.id === requestedPackageId && item.packageContents)
+    : undefined;
   const openLine = () => { window.location.href = lineUrl; };
+  const getCartId = (product: ShopProduct) => targetPackage ? getLinkedCartId(product.id, targetPackage.id) : product.id;
+  const productHref = (product: ShopProduct) => targetPackage
+    ? `/shop/${product.slug}?packageId=${targetPackage.id}`
+    : `/shop/${product.slug}`;
+  const addProduct = (product: ShopProduct) => {
+    if (!targetPackage) return addItem(product);
+    addItem({
+      ...product,
+      id: getLinkedCartId(product.id, targetPackage.id),
+      productId: product.id,
+      deliveryMode: "every-package",
+      packageId: targetPackage.id,
+      packageName: targetPackage.name,
+    });
+  };
   const selectCategory = (nextCategory: Category) => {
-    router.push(nextCategory === "ทั้งหมด" ? "/shop" : `/shop?category=${encodeURIComponent(nextCategory)}`, { scroll: false });
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextCategory === "ทั้งหมด") params.delete("category");
+    else params.set("category", nextCategory);
+    const query = params.toString();
+    router.push(`/shop${query ? `?${query}` : ""}`, { scroll: false });
   };
 
   return <ThemeProvider theme={theme}>
@@ -58,6 +88,10 @@ function ShopContent() {
         </Container>
 
         <Container id="products" maxWidth="lg" sx={{ px: { xs: 1.5, sm: 3, lg: 1 }, py: { xs: 2.5, md: 6 }, scrollMarginTop: 20 }}>
+          {targetPackage && <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, alignItems: { xs: "flex-start", sm: "center" }, justifyContent: "space-between", gap: 1.5, bgcolor: "#EEF7F0", border: "1px solid #CFE5D4", borderRadius: "18px", px: { xs: 2, sm: 2.5 }, py: 1.75, mb: 2.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}><Box sx={{ width: 40, height: 40, display: "grid", placeItems: "center", bgcolor: DS.white, color: "#568768", borderRadius: "12px" }}><PackageCheck size={20} /></Box><Box><Typography sx={{ fontSize: 14.5, fontWeight: 700 }}>เพิ่มสินค้าไปกับ {targetPackage.name}</Typography><Typography sx={{ color: DS.gray, fontSize: 12.5, mt: .2 }}>สินค้าที่เลือกจะถูกส่งพร้อมแพ็กเกจทุกครั้ง และคิดเพิ่มในทุก ๆ รอบ</Typography></Box></Box>
+            <Button component={Link} href="/cart" sx={{ color: "#4D7D5B", border: "1px solid #BFD9C5", bgcolor: DS.white, borderRadius: DS.radius.pill, px: 2, fontSize: 12.5, fontWeight: 600 }}>กลับไปตะกร้า</Button>
+          </Box>}
           <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", alignItems: { xs: "flex-start", md: "flex-end" }, gap: 2, mb: 3 }}>
             <Box><Typography sx={{ color: "#B96449", fontSize: 13, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>Our products</Typography><Typography sx={{ fontSize: { xs: 30, md: 37 }, fontWeight: 700, letterSpacing: "-.02em", mt: .5 }}>เลือกสิ่งที่ดีที่สุดให้น้อง</Typography><Typography sx={{ color: DS.gray, fontSize: 15, mt: .5 }}>{products.length} รายการ · ราคา Mockup</Typography></Box>
             <Box sx={{ display: "flex", flexWrap: { xs: "nowrap", md: "wrap" }, width: { xs: "calc(100vw - 24px)", md: "auto" }, overflowX: { xs: "auto", md: "visible" }, gap: .75, pb: { xs: .5, md: 0 }, scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}>{CATEGORIES.map((item) => <Button key={item} onClick={() => selectCategory(item)} aria-pressed={category === item} sx={{ flexShrink: 0, bgcolor: category === item ? DS.ink : DS.white, color: category === item ? DS.white : DS.ink, border: `1px solid ${category === item ? DS.ink : DS.line}`, borderRadius: DS.radius.pill, px: { xs: 1.5, md: 1.9 }, py: .8, fontSize: { xs: 12.5, md: 13.5 }, fontWeight: 600, "&:hover": { bgcolor: category === item ? "#44444D" : DS.peachSoft } }}>{item}</Button>)}</Box>
@@ -65,17 +99,17 @@ function ShopContent() {
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,minmax(0,1fr))", lg: "repeat(4,1fr)" }, gap: { xs: 1, sm: 1.5, md: 2 } }}>
             {products.map((product) => <Box key={product.id} component="article" sx={{ display: "flex", flexDirection: "column", minWidth: 0, bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: { xs: "17px", sm: "22px" }, p: { xs: .75, sm: 1.25 }, transition: "transform .2s,box-shadow .2s", "&:hover": { transform: "translateY(-4px)", boxShadow: DS.cardShadow } }}>
-              <Box component={Link} href={`/shop/${product.slug}`} aria-label={`ดูรายละเอียด ${product.name}`} sx={{ position: "relative", display: "block", height: { xs: 145, sm: 210 }, bgcolor: product.color, borderRadius: { xs: "13px", sm: "17px" }, overflow: "hidden" }}>
+              <Box component={Link} href={productHref(product)} aria-label={`ดูรายละเอียด ${product.name}`} sx={{ position: "relative", display: "block", height: { xs: 145, sm: 210 }, bgcolor: product.color, borderRadius: { xs: "13px", sm: "17px" }, overflow: "hidden" }}>
                 {product.badge && <Chip label={product.badge} size="small" sx={{ position: "absolute", zIndex: 2, top: 11, left: 11, bgcolor: PRODUCT_BADGE_COLORS[product.badge]?.background ?? DS.white, color: PRODUCT_BADGE_COLORS[product.badge]?.color ?? DS.ink, border: `1px solid ${PRODUCT_BADGE_COLORS[product.badge]?.border ?? DS.line}`, fontSize: 11.5, fontWeight: 600, boxShadow: "0 4px 12px rgba(43,43,51,.06)" }} />}
                 <IconButton aria-label={`บันทึก ${product.name}`} sx={{ position: "absolute", zIndex: 2, top: 8, right: 8, bgcolor: "rgba(255,255,255,.82)", color: DS.ink }}><Heart size={17} /></IconButton>
                 <Image src={product.image} alt={product.name} fill sizes="(max-width:600px) 45vw,(max-width:1200px) 45vw,260px" style={{ objectFit: "contain", padding: 14 }} />
               </Box>
               <Box sx={{ display: "flex", flexDirection: "column", flex: 1, p: "14px 8px 8px" }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><Typography sx={{ color: "#B96449", fontSize: 12.5, fontWeight: 600 }}>{product.category}</Typography><Box sx={{ display: "flex", alignItems: "center", gap: .3 }}><Star size={13} fill="#F6C85F" color="#F6C85F" /><Typography sx={{ color: DS.gray, fontSize: 12.5 }}>{product.rating}</Typography></Box></Box>
-                <Typography component={Link} href={`/shop/${product.slug}`} sx={{ color: DS.ink, fontSize: { xs: 15, sm: 18 }, fontWeight: 700, lineHeight: 1.3, mt: .7, textDecoration: "none", "&:hover": { color: "#B96449" } }}>{product.name}</Typography>
+                <Typography component={Link} href={productHref(product)} sx={{ color: DS.ink, fontSize: { xs: 15, sm: 18 }, fontWeight: 700, lineHeight: 1.3, mt: .7, textDecoration: "none", "&:hover": { color: "#B96449" } }}>{product.name}</Typography>
                 <Typography sx={{ color: "#747079", fontSize: { xs: 12, sm: 14 }, fontWeight: 400, lineHeight: 1.5, mt: .5, minHeight: { xs: 36, sm: 44 }, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{product.detail}</Typography>
                 <Typography sx={{ color: DS.gray, fontSize: 12.5, fontWeight: 500, mt: 1 }}>{product.weight}</Typography>
-                <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: .5, mt: "auto", pt: { xs: 1, sm: 1.4 } }}><Box sx={{ minWidth: 0 }}><Typography component="span" sx={{ fontSize: { xs: 18, sm: 22 }, fontWeight: 700 }}>฿{product.price.toLocaleString()}</Typography>{"oldPrice" in product && <Typography component="span" sx={{ display: { xs: "none", sm: "inline" }, color: DS.gray, fontSize: 12.5, textDecoration: "line-through", ml: .7 }}>฿{product.oldPrice}</Typography>}</Box><IconButton disabled={recentlyAddedId === product.id} onClick={() => addItem(product)} aria-label={`เพิ่ม ${product.name} ลงตะกร้า`} sx={{ width: { xs: 36, sm: 42 }, height: { xs: 36, sm: 42 }, flexShrink: 0, bgcolor: recentlyAddedId === product.id ? DS.mint : DS.ink, color: recentlyAddedId === product.id ? "#4D7D5B" : DS.white, "&:hover": { bgcolor: DS.peach, color: DS.ink }, "&.Mui-disabled": { bgcolor: DS.mint, color: "#4D7D5B" } }}>{recentlyAddedId === product.id ? <Check size={17} /> : <ShoppingCart size={17} />}</IconButton></Box>
+                <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: .5, mt: "auto", pt: { xs: 1, sm: 1.4 } }}><Box sx={{ minWidth: 0 }}><Typography component="span" sx={{ fontSize: { xs: 18, sm: 22 }, fontWeight: 700 }}>฿{product.price.toLocaleString()}</Typography>{"oldPrice" in product && <Typography component="span" sx={{ display: { xs: "none", sm: "inline" }, color: DS.gray, fontSize: 12.5, textDecoration: "line-through", ml: .7 }}>฿{product.oldPrice}</Typography>}</Box><IconButton disabled={recentlyAddedId === getCartId(product)} onClick={() => addProduct(product)} aria-label={`เพิ่ม ${product.name} ลงตะกร้า`} sx={{ width: { xs: 36, sm: 42 }, height: { xs: 36, sm: 42 }, flexShrink: 0, bgcolor: recentlyAddedId === getCartId(product) ? DS.mint : DS.ink, color: recentlyAddedId === getCartId(product) ? "#4D7D5B" : DS.white, "&:hover": { bgcolor: DS.peach, color: DS.ink }, "&.Mui-disabled": { bgcolor: DS.mint, color: "#4D7D5B" } }}>{recentlyAddedId === getCartId(product) ? <Check size={17} /> : <ShoppingCart size={17} />}</IconButton></Box>
               </Box>
             </Box>)}
           </Box>

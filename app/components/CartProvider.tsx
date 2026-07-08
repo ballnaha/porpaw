@@ -9,6 +9,12 @@ export interface CartProduct {
   price: number;
   image: string;
   weight: string;
+  packageContents?: string[];
+  petType?: "dog" | "cat";
+  productId?: number;
+  deliveryMode?: "with-package" | "every-package";
+  packageId?: number;
+  packageName?: string;
 }
 
 export interface CartItem extends CartProduct {
@@ -41,7 +47,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const timer = window.setTimeout(() => {
       try {
         const stored = window.localStorage.getItem(STORAGE_KEY);
-        if (stored) setItems(JSON.parse(stored) as CartItem[]);
+        if (stored) {
+          const parsed = JSON.parse(stored) as CartItem[];
+          setItems(parsed.map((item) => item.packageContents ? { ...item, quantity: 1, petType: item.petType ?? (item.packageContents.some((content) => content.includes("แคทนิป")) ? "cat" : "dog") } : item));
+        }
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       } finally {
@@ -75,18 +84,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setItems((current) => {
         const existing = current.find((item) => item.id === product.id);
         return existing
-          ? current.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + safeQuantity } : item)
-          : [...current, { ...product, quantity: safeQuantity }];
+          ? current.map((item) => item.id === product.id
+            ? product.packageContents ? { ...product, quantity: 1 } : { ...item, quantity: item.quantity + safeQuantity }
+            : item)
+          : [...current, { ...product, quantity: product.packageContents ? 1 : safeQuantity }];
       });
       setRecentlyAddedId(product.id);
       if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
       feedbackTimerRef.current = window.setTimeout(() => setRecentlyAddedId(null), 900);
       showToast({ message: `${product.name} จำนวน ${safeQuantity} ชิ้น ถูกเพิ่มลงในตะกร้า` });
     },
-    updateQuantity: (id, quantity) => setItems((current) => quantity <= 0
-      ? current.filter((item) => item.id !== id)
-      : current.map((item) => item.id === id ? { ...item, quantity } : item)),
-    removeItem: (id) => setItems((current) => current.filter((item) => item.id !== id)),
+    updateQuantity: (id, quantity) => setItems((current) => {
+      if (quantity <= 0) {
+        const removingPackage = current.some((item) => item.id === id && item.packageContents);
+        return current.filter((item) => item.id !== id && (!removingPackage || item.packageId !== id));
+      }
+      return current.map((item) => item.id === id ? { ...item, quantity } : item);
+    }),
+    removeItem: (id) => setItems((current) => {
+      const removingPackage = current.some((item) => item.id === id && item.packageContents);
+      return current.filter((item) => item.id !== id && (!removingPackage || item.packageId !== id));
+    }),
     clearCart: () => setItems([]),
   }), [items, recentlyAddedId, showToast]);
 

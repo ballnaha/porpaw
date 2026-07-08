@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Box, Container, Typography, Button, Drawer, IconButton } from "@mui/material";
-import { ArrowRight, Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
+import { ArrowRight, Minus, Plus, ShoppingBag, ShoppingCart, Trash2, X } from "lucide-react";
 import { DS } from "./DesignSystem";
 import { useCart } from "./CartProvider";
 
@@ -19,7 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [cartOpen, setCartOpen] = useState(false);
   const { items, itemCount, subtotal, updateQuantity, removeItem } = useCart();
-  const shipping = items.length === 0 || subtotal >= 1000 ? 0 : 79;
+  const hasPackage = items.some((item) => item.packageContents);
+  const shipping = items.length === 0 || hasPackage || subtotal >= 1000 ? 0 : 79;
   return (
     <Container
       maxWidth="lg"
@@ -158,9 +159,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <Box sx={{ position: "relative", width: 76, height: 76, bgcolor: "#FAF4EF", borderRadius: "13px", overflow: "hidden" }}><Image src={item.image} alt={item.name} fill sizes="76px" style={{ objectFit: "contain", padding: 6 }} /></Box>
                     <Box sx={{ minWidth: 0 }}>
                       <Typography noWrap sx={{ fontSize: 14, fontWeight: 700 }}>{item.name}</Typography>
-                      <Typography sx={{ color: DS.gray, fontSize: 11.5, mt: .2 }}>{item.weight}</Typography>
+                      <Typography sx={{ color: DS.gray, fontSize: 11.5, mt: .2 }}>{item.weight}</Typography>{item.packageId && <Typography sx={{ color: "#568768", fontSize: 10.5, mt: .15 }}>ส่งพร้อม {item.packageName} ทุกรอบ</Typography>}
                       <Typography sx={{ fontSize: 14.5, fontWeight: 700, mt: .5 }}>฿{item.price.toLocaleString()}</Typography>
-                      <Box sx={{ display: "inline-flex", alignItems: "center", border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, mt: .75, p: .15 }}><IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="ลดจำนวน"><Minus size={12} /></IconButton><Typography sx={{ width: 28, textAlign: "center", fontSize: 12, fontWeight: 600 }}>{item.quantity}</Typography><IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="เพิ่มจำนวน"><Plus size={12} /></IconButton></Box>
+                      {item.packageContents ? <Typography sx={{ display: "inline-flex", color: DS.gray, bgcolor: "#F8F7F5", border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, px: 1, py: .45, fontSize: 10.5, fontWeight: 600, mt: .75 }}>1 แพ็กเกจ / รอบ</Typography> : <Box sx={{ display: "inline-flex", alignItems: "center", border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, mt: .75, p: .15 }}><IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="ลดจำนวน"><Minus size={12} /></IconButton><Typography sx={{ width: 28, textAlign: "center", fontSize: 12, fontWeight: 600 }}>{item.quantity}</Typography><IconButton size="small" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="เพิ่มจำนวน"><Plus size={12} /></IconButton></Box>}
                     </Box>
                     <IconButton onClick={() => removeItem(item.id)} aria-label={`ลบ ${item.name}`} sx={{ alignSelf: "start", color: DS.gray, p: .75, "&:hover": { color: "#D35F5F", bgcolor: "#FFF0F0" } }}><Trash2 size={16} /></IconButton>
                   </Box>
@@ -170,8 +171,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Box sx={{ bgcolor: DS.white, borderTop: `1px solid ${DS.line}`, p: { xs: 2.25, sm: 2.75 }, boxShadow: "0 -12px 32px rgba(43,43,51,.06)" }}>
                 <Box sx={{ display: "grid", gap: .9 }}><Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ color: DS.gray, fontSize: 13 }}>ยอดสินค้า</Typography><Typography sx={{ fontSize: 13, fontWeight: 600 }}>฿{subtotal.toLocaleString()}</Typography></Box><Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ color: DS.gray, fontSize: 13 }}>ค่าจัดส่ง</Typography><Typography sx={{ color: shipping === 0 ? "#60906F" : DS.ink, fontSize: 13, fontWeight: 600 }}>{shipping === 0 ? "ฟรี" : `฿${shipping}`}</Typography></Box></Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderTop: `1px solid ${DS.line}`, mt: 1.5, pt: 1.5 }}><Typography sx={{ fontSize: 15, fontWeight: 700 }}>ยอดรวม</Typography><Typography sx={{ fontSize: 25, fontWeight: 700 }}>฿{(subtotal + shipping).toLocaleString()}</Typography></Box>
-                <Button component={Link} href="/checkout" onClick={() => setCartOpen(false)} endIcon={<ArrowRight size={16} />} fullWidth sx={{ bgcolor: DS.peach, color: DS.ink, borderRadius: DS.radius.pill, py: 1.15, fontSize: 14.5, fontWeight: 700, mt: 1.5, "&:hover": { bgcolor: "#F1A986" } }}>ไปหน้าชำระเงิน</Button>
-                <Button component={Link} href="/cart" onClick={() => setCartOpen(false)} fullWidth sx={{ color: DS.gray, fontSize: 12.5, mt: .5 }}>ดูตะกร้าแบบเต็มหน้า</Button>
+                <Button component={Link} href="/checkout" onClick={() => setCartOpen(false)} endIcon={<ArrowRight size={17} />} fullWidth sx={{ bgcolor: DS.ink, color: DS.white, borderRadius: DS.radius.pill, py: 1.25, fontSize: 15, fontWeight: 700, mt: 1.75, boxShadow: "0 8px 20px rgba(43,43,51,.16)", "&:hover": { bgcolor: "#44444D", boxShadow: "0 10px 24px rgba(43,43,51,.2)" } }}>ไปหน้าชำระเงิน</Button>
+                <Button component={Link} href="/cart" onClick={() => setCartOpen(false)} startIcon={<ShoppingBag size={15} />} fullWidth sx={{ color: DS.ink, bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, py: 1.05, fontSize: 13, fontWeight: 500, mt: 1, "&:hover": { bgcolor: "#F8F7F5", borderColor: "#D9D9DD" } }}>ดูตะกร้าแบบเต็มหน้า</Button>
               </Box>
             </>
           )}

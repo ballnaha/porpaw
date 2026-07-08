@@ -23,7 +23,8 @@ export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const [payment, setPayment] = useState("promptpay");
   const [completedTotal, setCompletedTotal] = useState<number | null>(null);
-  const shipping = items.length === 0 || subtotal >= 1000 ? 0 : 79;
+  const hasPackage = items.some((item) => item.packageContents);
+  const shipping = items.length === 0 || hasPackage || subtotal >= 1000 ? 0 : 79;
   const total = subtotal + shipping;
   const openLine = () => { window.location.href = lineUrl; };
 
@@ -41,7 +42,7 @@ export default function CheckoutPage() {
     <Box sx={{ minHeight: "100vh", bgcolor: "#FCFBFA", color: DS.ink, pb: { xs: 10, md: 0 }, pl: { lg: "104px" } }}>
       <Navbar handleLineLogin={openLine} isConnecting={false} />
       <Container component="main" maxWidth="lg" sx={{ px: { xs: 2.5, sm: 3, lg: 1 }, py: { xs: 3, md: 5 } }}>
-        <Button component={Link} href="/cart" startIcon={<ArrowLeft size={16} />} sx={{ color: DS.gray, px: 0, mb: 2 }}>กลับไปตะกร้า</Button>
+        <Button component={Link} href="/cart" startIcon={<ArrowLeft size={16} />} sx={{ color: DS.gray, px: 0, mb: 2, fontWeight: 400 }}>กลับไปตะกร้า</Button>
         <Typography sx={{ fontSize: { xs: 29, md: 38 }, fontWeight: 900, letterSpacing: "-.025em" }}>Checkout</Typography>
         <Typography sx={{ color: DS.gray, fontSize: 14, mt: .5, mb: 3 }}>กรอกข้อมูลสำหรับจัดส่งและตรวจสอบคำสั่งซื้อ</Typography>
 
@@ -64,7 +65,7 @@ export default function CheckoutPage() {
 
             <Box sx={{ position: { lg: "sticky" }, top: 20, bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "24px", p: { xs: 2.25, md: 2.75 }, boxShadow: DS.cardShadow }}>
               <Typography sx={{ fontSize: 20, fontWeight: 800, mb: 1.5 }}>คำสั่งซื้อของคุณ</Typography>
-              <Box sx={{ display: "grid", gap: 1.25, maxHeight: 285, overflowY: "auto", pr: .5 }}>{items.map((item) => <Box key={item.id} sx={{ display: "grid", gridTemplateColumns: "54px 1fr auto", alignItems: "center", gap: 1 }}><Box sx={{ position: "relative", width: 54, height: 54, bgcolor: "#FAF4EF", borderRadius: "11px" }}><Image src={item.image} alt="" fill sizes="54px" style={{ objectFit: "contain", padding: 5 }} /></Box><Box sx={{ minWidth: 0 }}><Typography noWrap sx={{ fontSize: 13, fontWeight: 700 }}>{item.name}</Typography><Typography sx={{ color: DS.gray, fontSize: 11 }}>จำนวน {item.quantity}</Typography></Box><Typography sx={{ fontSize: 13, fontWeight: 700 }}>฿{(item.price * item.quantity).toLocaleString()}</Typography></Box>)}</Box>
+              <Box sx={{ display: "grid", gap: 1.25, maxHeight: 285, overflowY: "auto", pr: .5 }}>{items.map((item) => <Box key={item.id} sx={{ display: "grid", gridTemplateColumns: "54px 1fr auto", alignItems: "center", gap: 1 }}><Box sx={{ position: "relative", width: 54, height: 54, bgcolor: "#FAF4EF", borderRadius: "11px" }}><Image src={item.image} alt="" fill sizes="54px" style={{ objectFit: "contain", padding: 5 }} /></Box><Box sx={{ minWidth: 0 }}><Typography noWrap sx={{ fontSize: 13, fontWeight: 700 }}>{item.name}</Typography><Typography sx={{ color: DS.gray, fontSize: 11 }}>จำนวน {item.quantity}</Typography>{item.packageId && <Typography sx={{ color: "#568768", fontSize: 10.5, mt: .15 }}>ส่งพร้อม {item.packageName} ทุกรอบ</Typography>}</Box><Typography sx={{ fontSize: 13, fontWeight: 700 }}>฿{(item.price * item.quantity).toLocaleString()}</Typography></Box>)}</Box>
               <Box sx={{ display: "grid", gap: 1, borderTop: `1px solid ${DS.line}`, borderBottom: `1px solid ${DS.line}`, py: 1.75, mt: 1.75 }}><Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ color: DS.gray, fontSize: 13 }}>ยอดสินค้า</Typography><Typography sx={{ fontSize: 13, fontWeight: 700 }}>฿{subtotal.toLocaleString()}</Typography></Box><Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography sx={{ color: DS.gray, fontSize: 13 }}>ค่าจัดส่ง</Typography><Typography sx={{ color: shipping === 0 ? "#60906F" : DS.ink, fontSize: 13, fontWeight: 700 }}>{shipping === 0 ? "ฟรี" : `฿${shipping}`}</Typography></Box></Box>
               <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", py: 2 }}><Typography sx={{ fontSize: 15, fontWeight: 700 }}>ยอดชำระ</Typography><Typography sx={{ fontSize: 28, fontWeight: 900 }}>฿{total.toLocaleString()}</Typography></Box>
               <Button type="submit" fullWidth sx={{ bgcolor: DS.peach, color: DS.ink, borderRadius: DS.radius.pill, py: 1.25, fontSize: 15, fontWeight: 800, "&:hover": { bgcolor: "#F1A986" } }}>ยืนยันคำสั่งซื้อ</Button>

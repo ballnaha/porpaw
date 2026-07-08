@@ -25,8 +25,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function ProductDetailPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ packageId?: string }> }) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const requestedPackageId = Number(query.packageId);
   const product = getProductBySlug(slug);
   if (!product) notFound();
 
@@ -44,6 +45,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
-    <ProductDetailClient product={product} />
+    <ProductDetailClient product={product} packageId={Number.isFinite(requestedPackageId) ? requestedPackageId : undefined} />
   </>;
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { Kanit, Nunito, Prompt } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./components/CartProvider";
@@ -46,9 +47,11 @@ export default function RootLayout({
       className={`${kanit.variable} ${nunito.variable} ${prompt.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-slate-800 font-sans">
-        <ToastProvider>
-          <CartProvider>{children}</CartProvider>
-        </ToastProvider>
+        <AppRouterCacheProvider>
+          <ToastProvider>
+            <CartProvider>{children}</CartProvider>
+          </ToastProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );

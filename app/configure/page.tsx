@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Check, Crown, ShieldCheck, Truck, Phone, RefreshCw } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Check, Crown, ShieldCheck, Truck, Phone, RefreshCw, ShoppingCart } from "lucide-react";
 import styles from "./configure.module.css";
 import portraitStyles from "./portrait.module.css";
 import readabilityStyles from "./readability.module.css";
@@ -17,6 +17,7 @@ import { Box } from "@mui/material";
 import { theme } from "../components/DesignSystem";
 import { Sidebar } from "../components/Sidebar";
 import { calculateSubscriptionPrice, type SubscriptionPlanName } from "../lib/subscriptionPricing";
+import { useCart } from "../components/CartProvider";
 
 const plans = [
   { name: "Paw-Lite", detail: "เริ่มทดลองด้วยกล่องเล็ก ปรับง่าย", price: 690, days: 15, image: "/images/paw-lite1.webp", features: ["เหมาะสำหรับเริ่มต้น", "อาหารสดใหม่ทุกรอบ", "ปรับรอบส่งได้"], accent: "#f28b5b", tint: "#fff2e9", imageTint: "#ffe3d2" },
@@ -57,9 +58,12 @@ function StepTitle({ number, title, subtitle }: { number: number; title: string;
 }
 
 function Dashboard() {
+  const router = useRouter();
   const search = useSearchParams();
+  const { addItem, removeItem } = useCart();
   const [species, setSpecies] = useState<"dog" | "cat">((search.get("species") as "dog" | "cat") || "dog");
   const requestedPlan = search.get("plan");
+  const editingPackageId = Number(search.get("editPackageId"));
   const [planName, setPlanName] = useState(
     plans.some((item) => item.name === requestedPlan) ? requestedPlan! : "Paw-Fit",
   );
@@ -88,6 +92,26 @@ function Dashboard() {
     ["เสริมบำรุงผิวหนัง & ขน", "น้ำมันปลาแซลมอน", "100 ml", "/images/groom3.webp", "1"],
     ["ของเล่นเสริมพัฒนาการ", species === "dog" ? "เชือกกัด & ลูกบอลนุ่ม" : "บอลแคทนิป & ไม้มาทาทาบิ", "", "/images/toy2.webp", "2"],
   ];
+  const addPackageToCart = () => {
+    const packageKey = `${plan.name}|${species}|${focus}|${monthlyGrams || "default"}`;
+    const packageId = Array.from(packageKey).reduce(
+      (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
+      1000,
+    );
+    if (Number.isFinite(editingPackageId) && editingPackageId > 0) removeItem(editingPackageId);
+    addItem({
+      id: packageId,
+      name: `แพ็กเกจ ${plan.name}`,
+      price: totalPrice,
+      image: plan.image,
+      petType: species,
+      weight: `${selectedGoal.title} • จัดส่งทุก ${plan.days} วัน`,
+      packageContents: summaryItems.map((item) =>
+        [item[0], item[1], item[2], `x${item[4]}`].filter(Boolean).join(" • "),
+      ),
+    });
+    router.push("/cart");
+  };
 
   return <ThemeProvider theme={theme}>
     <Sidebar sectionBase="/" />
@@ -149,7 +173,7 @@ function Dashboard() {
         </div>)}</div>
         <div className={styles.delivery}><Truck /><span><strong>จัดส่งฟรีทั่วประเทศ</strong><small>ส่งทุก {plan.days} วัน • ปรับรอบส่งได้ก่อนจัดส่ง</small></span></div>
         <div className={styles.total}><span><b>รวมทั้งหมด</b><strong>฿{totalPrice.toLocaleString()} <small>/ รอบส่ง</small></strong><em>เฉลี่ยวันละ ฿{Math.round(totalPrice / plan.days)}</em></span><i>{plan.badge || "เริ่มง่าย"}</i></div>
-        <a className={styles.lineButton} href="https://line.me/R/ti/p/@porpaw">สั่งซื้อแพ็กเกจนี้ผ่าน LINE <b>LINE</b></a>
+        <button className={styles.lineButton} type="button" onClick={addPackageToCart}>เพิ่มแพ็กเกจลงตะกร้า <b><ShoppingCart size={15} /></b></button>
       </aside>
       <div className={styles.trust}>
         <span><ShieldCheck /><b>ปลอดภัย 100%<small>ชำระเงินปลอดภัย</small></b></span>
