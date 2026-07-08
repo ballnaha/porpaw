@@ -15,7 +15,7 @@ import { DS } from "./DesignSystem";
 
 const NAV = [
   { icon: Home, label: "Home", href: "#top", active: true },
-  { icon: ShoppingBag, label: "Shop", href: "#features" },
+  { icon: ShoppingBag, label: "Shop", href: "/shop" },
   { icon: Package, label: "Membership", href: "#promo" },
   { icon: Calculator, label: "Nutrition", href: "#calculator" },
   { icon: Compass, label: "Places", href: "#explore" },
@@ -23,7 +23,14 @@ const NAV = [
 ];
 
 /** Fixed floating rail — desktop only, mirrors the reference sidebar. */
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  sectionBase?: string;
+  activeItem?: string;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ sectionBase = "", activeItem = "Home" }) => {
+  const sectionHref = (href: string) => href.startsWith("/") ? href : `${sectionBase}${href}`;
+
   return (
     <Box
       component="nav"
@@ -48,7 +55,7 @@ export const Sidebar: React.FC = () => {
       {/* Logo */}
       <Box
         component="a"
-        href="#top"
+        href={sectionHref("#top")}
         aria-label="Porpaw"
         sx={{
           width: 46,
@@ -68,11 +75,13 @@ export const Sidebar: React.FC = () => {
         />
       </Box>
 
-      {NAV.map(({ icon: Icon, label, href, active }) => (
+      {NAV.map(({ icon: Icon, label, href }) => {
+        const active = label === activeItem;
+        return (
         <Box
           key={label}
           component="a"
-          href={href}
+          href={sectionHref(href)}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -105,7 +114,8 @@ export const Sidebar: React.FC = () => {
           </Box>
           {label}
         </Box>
-      ))}
+        );
+      })}
     </Box>
   );
 };

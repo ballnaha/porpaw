@@ -1,63 +1,62 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
-import { Box, Container, Typography, Button } from "@mui/material";
-import { Check, ArrowRight, CalendarClock, PackageCheck, CalendarRange, SlidersHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Box, Button, Container, Typography } from "@mui/material";
+import {
+  ArrowRight,
+  CalendarClock,
+  Check,
+  MessageCircle,
+  PackageCheck,
+  CalendarRange,
+} from "lucide-react";
 import { DS } from "./DesignSystem";
+import { calculateSubscriptionPrice } from "../lib/subscriptionPricing";
 
 interface SubscriptionBannerProps {
   handleLineLogin: () => void;
   calculatedGrams?: number | null;
   species?: "dog" | "cat";
+  nutrition?: {
+    dailyGrams: number;
+    dailyKcal: number;
+    recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+  } | null;
 }
 
-const CHECKS = [
-  "สะสมแต้มทุกกล่อง ยิ่งอยู่นานสิทธิพิเศษยิ่งเพิ่มขึ้น",
-  "สั่งต่อเนื่องครบ 3 รอบ รับของขวัญพรีเมียมเฉพาะตัว",
-  "แจ้งเตือนก่อนส่ง เลื่อนวันหรือปรับสูตรได้ตลอดผ่าน LINE",
-];
+const BENEFITS = ["ปริมาณพอดีกิน", "ปรับรอบส่งได้", "สะสมสิทธิพิเศษ"];
 
 const PLANS = [
   {
     icon: CalendarClock,
-    badge: null,
     title: "Paw-Lite",
-    detail: "รอบส่งทุก 15 วัน · อาหารสดใหม่ไม่ค้างกระสอบ เหมาะสำหรับเริ่มต้น",
-    save: "ชิมลาง",
-    saveColor: DS.mintDeep,
+    audience: "เริ่มทดลอง",
+    days: 15,
+    price: 690,
+    detail: "กล่องเล็ก ปรับง่าย เหมาะสำหรับเริ่มต้น",
+    value: "เริ่มง่าย",
     highlight: false,
-    custom: false,
   },
   {
     icon: PackageCheck,
-    badge: "แนะนำสุดคุ้ม",
     title: "Paw-Fit",
-    detail: "รอบส่งทุก 30 วัน · ปริมาณพอดีกินจริง 100% หมดกังวลเหลือทิ้ง",
-    save: "ยอดนิยม",
-    saveColor: DS.peach,
+    audience: "แนะนำสำหรับส่วนใหญ่",
+    days: 30,
+    price: 1290,
+    detail: "ปริมาณพอดีตามที่กิน ดูแลง่ายทุกเดือน",
+    value: "ลงตัวที่สุด",
     highlight: true,
-    custom: false,
   },
   {
     icon: CalendarRange,
-    badge: null,
     title: "Paw-Max",
-    detail: "รอบส่งทุก 45 วัน · ขนาดกล่องใหญ่ ลดรอบการส่ง เซฟค่าส่งในระยะยาว",
-    save: "ประหยัดสุด",
-    saveColor: DS.mintDeep,
+    audience: "เน้นความคุ้มค่า",
+    days: 45,
+    price: 1690,
+    detail: "กล่องใหญ่ ลดรอบส่ง ราคาต่อมื้อคุ้มกว่า",
+    value: "คุ้มที่สุด",
     highlight: false,
-    custom: false,
-  },
-  {
-    icon: SlidersHorizontal,
-    badge: null,
-    title: "Paw-Mix",
-    detail: "เลือกสินค้า ปริมาณ และความถี่จัดส่งเอง ปรับผ่าน LINE ได้ตลอด",
-    save: "ยืดหยุ่นสูง",
-    saveColor: DS.gray,
-    highlight: false,
-    custom: true,
   },
 ];
 
@@ -65,288 +64,329 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
   handleLineLogin,
   calculatedGrams,
   species = "dog",
+  nutrition,
 }) => {
-  const dynamicPlans = React.useMemo(() => {
-    if (!calculatedGrams) return PLANS;
+  const router = useRouter();
 
-    return PLANS.map((p) => {
-      if (p.title === "Paw-Lite") {
-        return {
-          ...p,
-          detail: `จัดส่งรอบละ ${(calculatedGrams / 2 / 1000).toFixed(1)} กก. · สดใหม่ไม่ค้างกระสอบ`,
-        };
-      }
-      if (p.title === "Paw-Fit") {
-        return {
-          ...p,
-          detail: `จัดส่งรอบละ ${(calculatedGrams / 1000).toFixed(1)} กก. · พอดีกินจริง 100% ไร้ของเหลือ`,
-        };
-      }
-      if (p.title === "Paw-Max") {
-        return {
-          ...p,
-          detail: `จัดส่งรอบละ ${(calculatedGrams * 1.5 / 1000).toFixed(1)} กก. · ส่งรอบใหญ่ คุ้มค่าส่งที่สุด`,
-        };
-      }
-      return p;
-    });
-  }, [calculatedGrams]);
+  const plans = React.useMemo(
+    () =>
+      PLANS.map((plan) => ({
+        ...plan,
+        highlight: nutrition ? plan.title === nutrition.recommendedPlan : plan.highlight,
+        amount: calculatedGrams
+          ? `${((calculatedGrams * plan.days) / 30 / 1000).toFixed(1)} กก./รอบ`
+          : null,
+        calculatedPrice: calculatedGrams
+          ? calculateSubscriptionPrice({
+              plan: plan.title as "Paw-Lite" | "Paw-Fit" | "Paw-Max",
+              species,
+              gramsPerRound: (calculatedGrams * plan.days) / 30,
+            })
+          : plan.price,
+      })),
+    [calculatedGrams, nutrition, species],
+  );
 
-  const handlePlanClick = (p: typeof PLANS[0]) => {
-    if (typeof window !== "undefined") {
-      const gParam = calculatedGrams ? `&grams=${calculatedGrams}` : "";
-      window.location.href = `/configure?plan=${p.title}&species=${species}${gParam}`;
-    }
+  const selectPlan = (title: string) => {
+    const grams = calculatedGrams ? `&grams=${calculatedGrams}` : "";
+    router.push(`/configure?plan=${title}&species=${species}${grams}`);
   };
 
   return (
     <Container
       maxWidth="lg"
       id="promo"
-      sx={{ py: { xs: 3, md: 4 }, px: { xs: 2.5, sm: 3, lg: 1 }, scrollMarginTop: "40px" }}
+      sx={{ py: { xs: 3, md: 5 }, px: { xs: 2.5, sm: 3, lg: 1 }, scrollMarginTop: 40 }}
     >
       <Box
+        component="section"
+        aria-labelledby="subscription-title"
         sx={{
-          position: "relative",
-          overflow: "hidden",
-          bgcolor: DS.peachBg,
-          background: `linear-gradient(135deg, #FDF0E8 0%, ${DS.peachSoft} 100%)`,
-          borderRadius: "28px",
-          p: { xs: 2.5, md: 3 },
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "minmax(0, 1fr)",
-            md: "minmax(0, 1fr minmax(0, 1.05fr))",
-            lg: "minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 0.9fr)",
-          },
-          alignItems: "center",
-          gap: { xs: 2.5, lg: 2 },
+          bgcolor: "#FBFAF8",
+          border: `1px solid ${DS.line}`,
+          borderRadius: { xs: "24px", md: "32px" },
+          p: { xs: 2.25, sm: 3, md: 4 },
+          boxShadow: "0 20px 60px rgba(43,43,51,.06)",
         }}
       >
-        {/* ── Left · copy + CTA ── */}
-        <Box sx={{ maxWidth: 340 }}>
-          <Typography
-            sx={{
-              fontSize: { xs: 28, md: 33 },
-              fontWeight: 700,
-              color: DS.ink,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.15,
-            }}
-          >
-            ดูแลต่อเนื่อง ได้มากกว่าทุกกล่อง
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 16,
-              color: "#6b5f59",
-              fontWeight: 400,
-              mt: 1.5,
-              lineHeight: 1.6,
-            }}
-          >
-            จัดปริมาณตามที่กินจริง หมดกังวลเรื่องอาหารเหลือทิ้ง (Zero Waste)
-            <br />
-            พร้อมสิทธิพิเศษและของขวัญที่เพิ่มขึ้นเมื่อดูแลต่อเนื่อง
-          </Typography>
-
-          <Box sx={{ display: "grid", gap: 1.1, mt: 2.75 }}>
-            {CHECKS.map((c) => (
-              <Box key={c} sx={{ display: "flex", alignItems: "center", gap: 1.15 }}>
-                <Box
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    border: `1.5px solid ${DS.mintDeep}`,
-                    color: DS.mintDeep,
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Check size={11} strokeWidth={3} />
-                </Box>
-                <Typography sx={{ fontSize: 14.5, fontWeight: 500, color: DS.ink }}>
-                  {c}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-
-          <Button
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                const gParam = calculatedGrams ? `&grams=${calculatedGrams}` : "";
-                window.location.href = `/configure?plan=Paw-Fit&species=${species}${gParam}`;
-              }
-            }}
-            disableElevation
-            endIcon={<ArrowRight size={17} strokeWidth={2.5} />}
-            sx={{
-              mt: 3.25,
-              bgcolor: DS.peach,
-              color: DS.white,
-              borderRadius: DS.radius.pill,
-              px: 3.5,
-              py: 1.4,
-              fontSize: 15.5,
-              fontWeight: 600,
-              minWidth: 190,
-              justifyContent: "space-between",
-              transition: "transform .2s, box-shadow .2s",
-              "&:hover": {
-                bgcolor: "#EE876F",
-                transform: "translateY(-2px)",
-                boxShadow: "0 12px 26px rgba(238,135,111,.32)",
-              },
-            }}
-          >
-            เริ่มเป็นสมาชิก
-          </Button>
-        </Box>
-
-        {/* ── Center · product box ── */}
         <Box
           sx={{
-            position: "relative",
-            width: "100%",
-            aspectRatio: "1 / 1",
-            maxWidth: { xs: 300, md: 420 },
-            maxHeight: { xs: 300, md: 420 },
-            mx: "auto",
-            mt: { md: -3 },
-            mb: { md: -3 },
-            alignSelf: { md: "end" },
-            order: { xs: -1, md: 0 },
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "flex-end" },
+            gap: 2.5,
+            mb: { xs: 3, md: 3.5 },
           }}
         >
-          <Image
-            src="/images/box4.webp"
-            alt="กล่องอาหารและขนมสัตว์เลี้ยง Porpaw"
-            fill
-            sizes="(max-width: 900px) 300px, 420px"
-            priority
-            style={{ objectFit: "contain", objectPosition: "center bottom" }}
-          />
+          <Box sx={{ maxWidth: 650 }}>
+            <Typography
+              sx={{
+                color: "#B96449",
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: ".12em",
+                textTransform: "uppercase",
+                mb: 1,
+              }}
+            >
+              Subscription
+            </Typography>
+            <Typography
+              id="subscription-title"
+              sx={{
+                color: DS.ink,
+                fontSize: { xs: 28, sm: 32, md: 36 },
+                fontWeight: 700,
+                letterSpacing: "-.025em",
+                lineHeight: 1.15,
+              }}
+            >
+              เลือกการดูแลที่พอดีกับน้อง
+            </Typography>
+            <Typography
+              sx={{ color: "#68646A", fontSize: { xs: 14.5, md: 16 }, fontWeight: 400, mt: 1, lineHeight: 1.6 }}
+            >
+              เราจัดปริมาณให้พอดีและส่งตามรอบ คุณปรับเปลี่ยนได้ก่อนจัดส่งทุกครั้ง
+            </Typography>
+          </Box>
+
+          {nutrition ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, auto)",
+                gap: "6px 18px",
+                bgcolor: DS.white,
+                border: `1px solid ${DS.line}`,
+                borderRadius: "18px",
+                px: 2,
+                py: 1.5,
+              }}
+            >
+              <Typography sx={{ color: DS.gray, fontSize: 11.5, fontWeight: 600 }}>พลังงาน / วัน</Typography>
+              <Typography sx={{ color: DS.gray, fontSize: 11.5, fontWeight: 600 }}>อาหาร / วัน</Typography>
+              <Typography sx={{ color: DS.ink, fontSize: 17, fontWeight: 800 }}>
+                {nutrition.dailyKcal.toLocaleString()} kcal
+              </Typography>
+              <Typography sx={{ color: DS.ink, fontSize: 17, fontWeight: 800 }}>
+                {nutrition.dailyGrams.toLocaleString()} กรัม
+              </Typography>
+              <Typography sx={{ gridColumn: "1 / -1", color: "#B96449", fontSize: 12.5, fontWeight: 700, mt: 0.25 }}>
+                แนะนำ {nutrition.recommendedPlan} สำหรับผลคำนวณนี้
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+              {BENEFITS.map((benefit) => (
+                <Box
+                  key={benefit}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.65,
+                    bgcolor: DS.white,
+                    border: `1px solid ${DS.line}`,
+                    borderRadius: DS.radius.pill,
+                    px: 1.25,
+                    py: 0.75,
+                  }}
+                >
+                  <Check size={13} strokeWidth={3} color="#60906F" />
+                  <Typography sx={{ color: DS.ink, fontSize: 12.5, fontWeight: 600 }}>
+                    {benefit}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
         </Box>
 
-        {/* ── Right · plan cards ── */}
-        <Box sx={{ display: "grid", gap: 1.25 }}>
-          {dynamicPlans.map((p) => {
-            const Icon = p.icon;
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" }, gap: 1.5 }}>
+          {plans.map((plan) => {
+            const Icon = plan.icon;
             return (
               <Box
-                key={p.title}
-                onClick={() => handlePlanClick(p)}
-                role="button"
-                tabIndex={0}
+                key={plan.title}
                 sx={{
                   position: "relative",
-                  bgcolor: p.custom ? "transparent" : DS.white,
-                  borderRadius: "18px",
-                  border: p.highlight
-                    ? `1.5px solid ${DS.peach}`
-                    : p.custom
-                      ? `1.5px dashed ${DS.peach}`
-                      : "1.5px solid transparent",
-                  p: "15px 18px",
                   display: "flex",
-                  alignItems: "center",
-                  gap: 1.5,
-                  cursor: "pointer",
-                  boxShadow: p.highlight
-                    ? "0 14px 30px rgba(245,153,127,.18)"
-                    : p.custom
-                      ? "none"
-                      : "0 8px 20px rgba(43,43,51,.06)",
-                  transition: "transform .2s, box-shadow .2s, border-color .2s",
-                  "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: p.custom
-                      ? "0 10px 24px rgba(245,153,127,.14)"
-                      : "0 16px 32px rgba(43,43,51,.12)",
-                    borderColor: p.custom ? DS.peach : undefined,
-                    bgcolor: p.custom ? "rgba(255,255,255,.5)" : undefined,
-                  },
-                  "&:focus-visible": {
-                    outline: `2px solid ${DS.peach}`,
-                    outlineOffset: 2,
-                  },
+                  flexDirection: "column",
+                  minWidth: 0,
+                  bgcolor: plan.highlight ? DS.ink : DS.white,
+                  color: plan.highlight ? DS.white : DS.ink,
+                  border: plan.highlight ? `1px solid ${DS.ink}` : `1px solid ${DS.line}`,
+                  borderRadius: "22px",
+                  p: { xs: 2.25, md: 2.5 },
+                  boxShadow: plan.highlight ? "0 18px 38px rgba(43,43,51,.18)" : "none",
+                  transform: { md: plan.highlight ? "translateY(-6px)" : "none" },
                 }}
               >
-                {/* Floating "popular" badge */}
-                {p.badge && (
+                {plan.highlight && (
                   <Box
                     sx={{
                       position: "absolute",
-                      top: -9,
-                      left: 16,
+                      top: -12,
+                      right: 18,
                       bgcolor: DS.peach,
-                      color: DS.white,
-                      fontSize: 10,
-                      fontWeight: 600,
-                      letterSpacing: ".04em",
-                      px: 1.15,
-                      py: "3px",
+                      color: DS.ink,
                       borderRadius: DS.radius.pill,
-                      boxShadow: "0 4px 10px rgba(245,153,127,.35)",
+                      px: 1.4,
+                      py: 0.5,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      boxShadow: "0 6px 16px rgba(245,185,155,.35)",
                     }}
                   >
-                    {p.badge}
+                    {nutrition ? "เหมาะกับน้อง" : "แนะนำ"}
                   </Box>
                 )}
 
-                {/* Icon chip */}
-                <Box
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        display: "grid",
+                        placeItems: "center",
+                        flexShrink: 0,
+                        borderRadius: "13px",
+                        bgcolor: plan.highlight ? "rgba(255,255,255,.12)" : DS.peachSoft,
+                        color: plan.highlight ? DS.peach : "#C87559",
+                      }}
+                    >
+                      <Icon size={20} strokeWidth={2.2} />
+                    </Box>
+                    <Box>
+                      <Typography sx={{ fontSize: 19, fontWeight: 800, lineHeight: 1.15 }}>
+                        {plan.title}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: plan.highlight ? "rgba(255,255,255,.64)" : DS.gray,
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          mt: 0.3,
+                        }}
+                      >
+                        {plan.audience}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Typography sx={{ color: plan.highlight ? DS.peach : "#B96449", fontSize: 12.5, fontWeight: 800 }}>
+                    {plan.value}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75, mt: 2.5 }}>
+                  <Typography sx={{ fontSize: { xs: 38, md: 42 }, fontWeight: 800, letterSpacing: "-.04em", lineHeight: 1 }}>
+                    {plan.days}
+                  </Typography>
+                  <Typography sx={{ color: plan.highlight ? "rgba(255,255,255,.7)" : DS.gray, fontSize: 14, fontWeight: 600 }}>
+                    วัน / รอบ
+                  </Typography>
+                </Box>
+
+                <Typography
                   sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: "12px",
-                    flexShrink: 0,
-                    display: "grid",
-                    placeItems: "center",
-                    bgcolor: p.highlight
-                      ? DS.peach
-                      : p.custom
-                        ? "transparent"
-                        : DS.peachSoft,
-                    border: p.custom ? `1.5px dashed ${DS.peach}` : "none",
-                    color: p.highlight ? DS.white : DS.peach,
+                    color: plan.highlight ? "rgba(255,255,255,.76)" : "#66616A",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    lineHeight: 1.55,
+                    mt: 1.25,
+                    minHeight: { md: 44 },
                   }}
                 >
-                  <Icon size={18} strokeWidth={2.2} />
-                </Box>
+                  {plan.amount ?? plan.detail}
+                </Typography>
 
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography sx={{ fontSize: 16, fontWeight: 600, color: DS.ink, lineHeight: 1.25 }}>
-                    {p.title}
-                  </Typography>
-                  <Typography
-                    sx={{ fontSize: 12.5, color: DS.gray, fontWeight: 400, mt: 0.2, lineHeight: 1.35 }}
-                  >
-                    {p.detail}
-                  </Typography>
-                </Box>
-
-                {p.custom ? (
-                  <ArrowRight size={17} strokeWidth={2.5} color={DS.peach} style={{ flexShrink: 0 }} />
-                ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "space-between",
+                    gap: 1,
+                    borderTop: `1px solid ${plan.highlight ? "rgba(255,255,255,.14)" : DS.line}`,
+                    mt: 2,
+                    pt: 1.75,
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      sx={{
+                        color: plan.highlight ? "rgba(255,255,255,.58)" : DS.gray,
+                        fontSize: 11.5,
+                        fontWeight: 600,
+                      }}
+                    >
+                      ราคาเริ่มต้น
+                    </Typography>
+                    <Typography sx={{ fontSize: 25, fontWeight: 800, letterSpacing: "-.025em", lineHeight: 1.15, mt: 0.2 }}>
+                      ฿{plan.calculatedPrice.toLocaleString()}
+                    </Typography>
+                  </Box>
                   <Typography
                     sx={{
-                      fontSize: 15,
-                      fontWeight: 700,
-                      color: p.saveColor,
-                      flexShrink: 0,
-                      whiteSpace: "nowrap",
+                      color: plan.highlight ? "rgba(255,255,255,.58)" : DS.gray,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      mb: 0.25,
                     }}
                   >
-                    {p.save}
+                    / รอบส่ง
                   </Typography>
-                )}
+                </Box>
+
+                <Button
+                  onClick={() => selectPlan(plan.title)}
+                  endIcon={<ArrowRight size={16} strokeWidth={2.5} />}
+                  disableElevation
+                  sx={{
+                    mt: 2.5,
+                    bgcolor: plan.highlight ? DS.peach : "#F5F2EF",
+                    color: DS.ink,
+                    borderRadius: DS.radius.pill,
+                    py: 1.1,
+                    px: 2,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    "&:hover": { bgcolor: plan.highlight ? "#F1A986" : DS.peachSoft },
+                  }}
+                >
+                  เลือก {plan.title}
+                </Button>
               </Box>
             );
           })}
+        </Box>
+
+        <Typography sx={{ color: DS.gray, fontSize: 11.5, textAlign: "center", mt: 1.75 }}>
+          *ราคาตัวอย่างสำหรับ Mockup ราคาจริงขึ้นอยู่กับปริมาณอาหารและสินค้าที่เลือก
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "center",
+            alignItems: "center",
+            gap: { xs: 0.5, sm: 1 },
+            mt: { xs: 2.5, md: 3 },
+          }}
+        >
+          <Typography sx={{ color: DS.gray, fontSize: 13.5 }}>
+            ยังไม่ตรงกับที่ต้องการ?
+          </Typography>
+          <Button
+            onClick={handleLineLogin}
+            variant="text"
+            startIcon={<MessageCircle size={16} strokeWidth={2.2} />}
+            endIcon={<ArrowRight size={14} strokeWidth={2.2} />}
+            sx={{ color: DS.ink, fontSize: 13.5, fontWeight: 700, px: 1, py: 0.5 }}
+          >
+            จัดกล่องเฉพาะน้องผ่าน LINE
+          </Button>
         </Box>
       </Box>
     </Container>

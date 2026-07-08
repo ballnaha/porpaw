@@ -148,7 +148,7 @@ export const Features: React.FC = () => {
           {CATEGORIES.map(({ thLabel, enLabel, image, bg, borderColor }) => (
             <Box
               component="a"
-              href="#promo"
+              href={`/shop?category=${encodeURIComponent(thLabel)}`}
               key={thLabel}
               sx={{
                 display: "flex",

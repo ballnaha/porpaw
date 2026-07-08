@@ -1,0 +1,28 @@
+.backNav {
+  max-width: 1320px;
+  margin: 0 auto 10px;
+}
+
+.backNav a {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: #5f646c;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.backNav a:hover {
+  color: #d76536;
+  background: #fff1e8;
+}
+
+.backNav a:focus-visible {
+  outline: 3px solid #ffb18f;
+  outline-offset: 2px;
+}

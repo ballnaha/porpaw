@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Box } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme, DS } from "./DesignSystem";
@@ -25,6 +25,28 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
 }) => {
   const [calculatedGrams, setCalculatedGrams] = useState<number | null>(null);
   const [species, setSpecies] = useState<"dog" | "cat">("dog");
+  const [nutrition, setNutrition] = useState<{
+    dailyGrams: number;
+    dailyKcal: number;
+    recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+  } | null>(null);
+
+  const handleNutritionCalculate = useCallback(
+    (
+      grams: number | null,
+      sp: "dog" | "cat",
+      nutritionResult: {
+        dailyGrams: number;
+        dailyKcal: number;
+        recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+      } | null,
+    ) => {
+      setCalculatedGrams(grams);
+      setSpecies(sp);
+      setNutrition(nutritionResult);
+    },
+    [],
+  );
 
   return (
     <ThemeProvider theme={theme}>
@@ -44,16 +66,12 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
         <Navbar handleLineLogin={handleLineLogin} isConnecting={isConnecting} />
         <Hero handleLineLogin={handleLineLogin} isConnecting={isConnecting} />
         <Features />
-        <NutritionCalculator
-          onCalculate={(grams, sp) => {
-            setCalculatedGrams(grams);
-            setSpecies(sp);
-          }}
-        />
+        <NutritionCalculator onCalculate={handleNutritionCalculate} />
         <SubscriptionBanner
           handleLineLogin={handleLineLogin}
           calculatedGrams={calculatedGrams}
           species={species}
+          nutrition={nutrition}
         />
         <Places handleLineLogin={handleLineLogin} />
         <Healthcare handleLineLogin={handleLineLogin} />

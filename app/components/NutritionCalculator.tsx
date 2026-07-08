@@ -376,7 +376,15 @@ const RECOMMENDED_BRANDS: Record<Species, Record<string, BrandRecommendation[]>>
 };
 
 interface NutritionCalculatorProps {
-  onCalculate?: (grams: number | null, species: Species) => void;
+  onCalculate?: (
+    grams: number | null,
+    species: Species,
+    nutrition: {
+      dailyGrams: number;
+      dailyKcal: number;
+      recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+    } | null,
+  ) => void;
 }
 
 export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
@@ -404,7 +412,16 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
     const kcal = Math.round(rer * lifeStage.factor * actFactor * goalFactor * neutFactor);
     const grams = Math.round((kcal / KCAL_PER_GRAM) / 5) * 5;
     const monthlyGrams = grams * 30;
-    return { kcal, grams, monthlyGrams, lifeStage };
+    const recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max" =
+      goal === "lose"
+        ? "Paw-Fit"
+        : monthlyGrams < 3000
+          ? "Paw-Lite"
+          : monthlyGrams >= 12000
+            ? "Paw-Max"
+            : "Paw-Fit";
+
+    return { kcal, grams, monthlyGrams, lifeStage, recommendedPlan };
   }, [weight, age, activity, goal, species, neutered]);
 
   const grams = result?.grams ?? null;
@@ -413,7 +430,17 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
 
   useEffect(() => {
     if (onCalculate) {
-      onCalculate(result ? result.monthlyGrams : null, species);
+      onCalculate(
+        result ? result.monthlyGrams : null,
+        species,
+        result
+          ? {
+              dailyGrams: result.grams,
+              dailyKcal: result.kcal,
+              recommendedPlan: result.recommendedPlan,
+            }
+          : null,
+      );
     }
   }, [result, species, onCalculate]);
 
@@ -766,12 +793,15 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                   <Typography sx={{ fontSize: 10.5, color: DS.gray, mt: 0.2 }}>
                     ใช้เลือกขนาดถุงที่ใกล้เคียง เพื่อลดของเหลือและรวมส่งครั้งเดียว
                   </Typography>
+                  <Typography sx={{ fontSize: 11.5, color: "#B96449", fontWeight: 700, mt: 0.75 }}>
+                    แพ็กเกจที่เหมาะ: {result.recommendedPlan}
+                  </Typography>
                 </Box>
               )}
               {result && (
                 <Button
                   component="a"
-                  href={`/configure?grams=${result.monthlyGrams}&species=${species}`}
+                  href={`/configure?plan=${result.recommendedPlan}&grams=${result.monthlyGrams}&species=${species}`}
                   disableElevation
                   sx={{
                     mt: 1.5,
@@ -793,7 +823,7 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                     },
                   }}
                 >
-                  เลือกแพ็กเกจจัดส่งสำหรับน้อง
+                  ดู {result.recommendedPlan} ที่แนะนำ
                 </Button>
               )}
             </Box>
