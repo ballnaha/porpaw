@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum FoodGrade {
+  ESSENTIAL
+  PLUS
+  PREMIUM
+}
+
+enum FormulaGoalType {
+  SKIN_COAT
+  IMMUNITY
+  DIGESTION
+  WEIGHT
+  SENIOR
+  SENSITIVE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+  passwordHash  String?   @db.VarChar(255)
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model PackageTier {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  grade       FoodGrade @unique
+  description String    @db.Text
+  monthlyDays Int       @default(30)
+  basePrice   Int
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FormulaGoal {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  type        FormulaGoalType @unique
+  description String          @db.Text
+  multiplier  Decimal         @default(1.00) @db.Decimal(5, 2)
+  sortOrder   Int             @default(0)
+  isActive    Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

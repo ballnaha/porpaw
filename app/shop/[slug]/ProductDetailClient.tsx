@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Box, Button, Chip, Container, IconButton, ThemeProvider, Typography } from "@mui/material";
 import { Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, ShoppingCart, Star } from "lucide-react";
+import { BackButton } from "../../components/BackButton";
 import { Navbar } from "../../components/Navbar";
 import { Sidebar } from "../../components/Sidebar";
 import { Footer } from "../../components/Footer";
@@ -31,7 +32,7 @@ export default function ProductDetailClient({ product, packageId }: { product: S
     ...PRODUCTS.filter((item) => item.category === product.category && item.id !== product.id),
     ...PRODUCTS.filter((item) => item.category !== product.category && item.id !== product.id),
   ].slice(0, 4);
-  const openLine = () => { window.location.href = "https://line.me/R/ti/p/@porpaw"; };
+  const openLine = () => { window.location.href = "https://line.me/R/ti/p/@zoomiedash"; };
   const addToCart = () => {
     addItem(targetPackage ? {
       ...product,
@@ -62,6 +63,9 @@ export default function ProductDetailClient({ product, packageId }: { product: S
     <Box sx={{ minHeight: "100vh", bgcolor: "#FCFBFA", color: DS.ink, pb: { xs: 10, md: 0 }, pl: { lg: "104px" } }}>
       <Navbar handleLineLogin={openLine} isConnecting={false} />
       <Container component="main" maxWidth="lg" sx={{ px: { xs: 2.5, sm: 3, lg: 1 }, py: { xs: 2.5, md: 4.5 } }}>
+        <BackButton fallbackHref={targetPackage ? `/shop?packageId=${targetPackage.id}` : "/shop"} preferHistory>
+          กลับ
+        </BackButton>
         <Box component="nav" aria-label="Breadcrumb" sx={{ display: "flex", alignItems: "center", gap: .75, color: DS.gray, fontSize: 13.5, mb: 2.5 }}><Box component={Link} href={targetPackage ? `/shop?packageId=${targetPackage.id}` : "/shop"} sx={{ color: DS.gray, textDecoration: "none", "&:hover": { color: DS.ink } }}>ร้านค้า</Box><span>/</span><Box component={Link} href={`/shop?category=${encodeURIComponent(product.category)}${targetPackage ? `&packageId=${targetPackage.id}` : ""}`} sx={{ color: DS.gray, textDecoration: "none", "&:hover": { color: "#B96449" } }}>{product.category}</Box><span>/</span><Typography component="span" noWrap sx={{ color: DS.ink, fontSize: 13.5, maxWidth: 200 }}>{product.name}</Typography></Box>
 
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0,1fr) minmax(360px,.88fr)" }, gap: { xs: 3, md: 5 }, alignItems: "start" }}>

@@ -9,9 +9,7 @@ export default function Home() {
 
   const handleLineLogin = () => {
     setIsConnecting(true);
-    setTimeout(() => {
-      setIsConnecting(false);
-    }, 1200);
+    window.location.href = "/login";
   };
 
   return (

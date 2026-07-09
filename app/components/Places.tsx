@@ -3,14 +3,14 @@
 import React from "react";
 import Image from "next/image";
 import { Box, Button, Container, Typography, Tooltip, Chip } from "@mui/material";
-import { ArrowRight, Bookmark, MapPin, Waves, Trees, Coffee, Snowflake, Hotel } from "lucide-react";
+import { ArrowRight, Bookmark, MapPin, Waves, Trees, Coffee, Snowflake, Hotel, type LucideIcon } from "lucide-react";
 import { DS } from "./DesignSystem";
 
 interface PlacesProps {
   handleLineLogin: () => void;
 }
 
-const FACILITY_MAP: Record<string, { icon: React.ComponentType<any>; label: string }> = {
+const FACILITY_MAP: Record<string, { icon: LucideIcon; label: string }> = {
   pool: { icon: Waves, label: "มีสระว่ายน้ำ" },
   lawn: { icon: Trees, label: "มีสนามหญ้า/สวน" },
   cafe: { icon: Coffee, label: "มีคาเฟ่ให้บริการ" },

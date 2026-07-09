@@ -33,7 +33,7 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "porpaw-cart";
+const STORAGE_KEY = "zoomiedash-cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();

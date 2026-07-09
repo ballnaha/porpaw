@@ -12,13 +12,13 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const product = getProductBySlug(slug);
-  if (!product) return { title: "ไม่พบสินค้า | Porpaw", robots: { index: false, follow: false } };
+  if (!product) return { title: "ไม่พบสินค้า | ZoomieDash", robots: { index: false, follow: false } };
 
-  const title = `${product.name} ${product.weight} | Porpaw`;
+  const title = `${product.name} ${product.weight} | ZoomieDash`;
   return {
     title,
     description: product.description,
-    keywords: [product.name, product.category, "อาหารสัตว์เลี้ยง", "Porpaw"],
+    keywords: [product.name, product.category, "อาหารสัตว์เลี้ยง", "ZoomieDash"],
     alternates: { canonical: `/shop/${product.slug}` },
     openGraph: { title, description: product.description, url: `/shop/${product.slug}`, type: "website", images: [{ url: product.image, alt: product.name }] },
     twitter: { card: "summary_large_image", title, description: product.description, images: [product.image] },
@@ -37,8 +37,8 @@ export default async function ProductDetailPage({ params, searchParams }: { para
     name: product.name,
     image: [`${siteUrl}${product.image}`],
     description: product.description,
-    sku: `PORPAW-${product.id}`,
-    brand: { "@type": "Brand", name: "Porpaw" },
+    sku: `ZOOMIEDASH-${product.id}`,
+    brand: { "@type": "Brand", name: "ZoomieDash" },
     aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: 24 },
     offers: { "@type": "Offer", url: `${siteUrl}/shop/${product.slug}`, priceCurrency: "THB", price: product.price, availability: "https://schema.org/InStock", itemCondition: "https://schema.org/NewCondition" },
   };

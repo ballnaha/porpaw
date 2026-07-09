@@ -4,7 +4,8 @@ import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Box, Button, Container, FormControlLabel, Radio, RadioGroup, TextField, ThemeProvider, Typography } from "@mui/material";
-import { ArrowLeft, Check, CreditCard, Landmark, MapPin, MessageCircle, ShieldCheck, Truck } from "lucide-react";
+import { Check, CreditCard, Landmark, MapPin, MessageCircle, ShieldCheck, Truck } from "lucide-react";
+import { BackButton } from "../components/BackButton";
 import { Navbar } from "../components/Navbar";
 import { Sidebar } from "../components/Sidebar";
 import { Footer } from "../components/Footer";
@@ -12,7 +13,7 @@ import { DS, theme } from "../components/DesignSystem";
 import { useCart } from "../components/CartProvider";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 
-const lineUrl = "https://line.me/R/ti/p/@porpaw";
+const lineUrl = "https://line.me/R/ti/p/@zoomiedash";
 const fieldSx = { "& .MuiOutlinedInput-root": { bgcolor: DS.white, borderRadius: "14px", "& fieldset": { borderColor: DS.line }, "&:hover fieldset": { borderColor: DS.peach }, "&.Mui-focused fieldset": { borderColor: DS.peach } }, "& .MuiInputLabel-root.Mui-focused": { color: "#B96449" } };
 
 function StepHeader({ number, title, icon: Icon }: { number: number; title: string; icon: typeof MapPin }) {
@@ -42,7 +43,9 @@ export default function CheckoutPage() {
     <Box sx={{ minHeight: "100vh", bgcolor: "#FCFBFA", color: DS.ink, pb: { xs: 10, md: 0 }, pl: { lg: "104px" } }}>
       <Navbar handleLineLogin={openLine} isConnecting={false} />
       <Container component="main" maxWidth="lg" sx={{ px: { xs: 2.5, sm: 3, lg: 1 }, py: { xs: 3, md: 5 } }}>
-        <Button component={Link} href="/cart" startIcon={<ArrowLeft size={16} />} sx={{ color: DS.gray, px: 0, mb: 2, fontWeight: 400 }}>กลับไปตะกร้า</Button>
+        <BackButton fallbackHref="/cart" preferHistory bottomSpacing={2}>
+          กลับไปตะกร้า
+        </BackButton>
         <Typography sx={{ fontSize: { xs: 29, md: 38 }, fontWeight: 900, letterSpacing: "-.025em" }}>Checkout</Typography>
         <Typography sx={{ color: DS.gray, fontSize: 14, mt: .5, mb: 3 }}>กรอกข้อมูลสำหรับจัดส่งและตรวจสอบคำสั่งซื้อ</Typography>
 

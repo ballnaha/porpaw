@@ -1,11 +1,11 @@
 import { createTheme } from "@mui/material/styles";
 
 /**
- * Pawmi design tokens — "Happy pet, Happy life."
+ * ZoomieDash design tokens — "Happy pet, Happy life."
  * Soft pastel palette lifted from the reference landing page.
  */
 export const DS = {
-  // ── Pawmi pastel palette ──
+  // ── ZoomieDash pastel palette ──
   peach: "#F5B99B",
   peachSoft: "#FBDCC9",
   peachBg: "#FAD9C6",

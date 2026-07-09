@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { PawPrint, ChevronDown, Minus, Plus } from "lucide-react";
 import { DS } from "./DesignSystem";
+import type { SubscriptionPlanName } from "../lib/subscriptionPricing";
 
 type Species = "dog" | "cat";
 
@@ -382,7 +383,7 @@ interface NutritionCalculatorProps {
     nutrition: {
       dailyGrams: number;
       dailyKcal: number;
-      recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+      recommendedPlan: SubscriptionPlanName;
     } | null,
   ) => void;
 }
@@ -412,14 +413,14 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
     const kcal = Math.round(rer * lifeStage.factor * actFactor * goalFactor * neutFactor);
     const grams = Math.round((kcal / KCAL_PER_GRAM) / 5) * 5;
     const monthlyGrams = grams * 30;
-    const recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max" =
+    const recommendedPlan: SubscriptionPlanName =
       goal === "lose"
-        ? "Paw-Fit"
+        ? "Plus"
         : monthlyGrams < 3000
-          ? "Paw-Lite"
+          ? "Essential"
           : monthlyGrams >= 12000
-            ? "Paw-Max"
-            : "Paw-Fit";
+            ? "Premium"
+            : "Plus";
 
     return { kcal, grams, monthlyGrams, lifeStage, recommendedPlan };
   }, [weight, age, activity, goal, species, neutered]);
@@ -783,25 +784,23 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                   }}
                 >
                   <Typography sx={{ fontSize: 11, color: DS.gray, fontWeight: 600 }}>
-                    ปริมาณแนะนำสำหรับรอบส่ง 30 วัน
+                    เกรดอาหารที่เหมาะกับผลคำนวณ
                   </Typography>
                   <Typography sx={{ fontSize: 18, color: DS.ink, fontWeight: 800, mt: 0.2 }}>
-                    {(result.monthlyGrams / 1000).toLocaleString(undefined, {
-                      maximumFractionDigits: 1,
-                    })} กก.
+                    {result.recommendedPlan}
                   </Typography>
                   <Typography sx={{ fontSize: 10.5, color: DS.gray, mt: 0.2 }}>
-                    ใช้เลือกขนาดถุงที่ใกล้เคียง เพื่อลดของเหลือและรวมส่งครั้งเดียว
+                    สูตรดูแลและจำนวนสินค้าในแพ็กเกจจะจัดในขั้นตอนถัดไป
                   </Typography>
                   <Typography sx={{ fontSize: 11.5, color: "#B96449", fontWeight: 700, mt: 0.75 }}>
-                    แพ็กเกจที่เหมาะ: {result.recommendedPlan}
+                    อ้างอิง {result.grams.toLocaleString()} กรัม / วัน
                   </Typography>
                 </Box>
               )}
               {result && (
                 <Button
                   component="a"
-                  href={`/configure?plan=${result.recommendedPlan}&grams=${result.monthlyGrams}&species=${species}`}
+                  href={`/configure?plan=${result.recommendedPlan}&species=${species}`}
                   disableElevation
                   sx={{
                     mt: 1.5,
@@ -823,7 +822,7 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                     },
                   }}
                 >
-                  ดู {result.recommendedPlan} ที่แนะนำ
+                  ดูเกรด {result.recommendedPlan} ที่แนะนำ
                 </Button>
               )}
             </Box>

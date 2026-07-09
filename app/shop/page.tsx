@@ -17,7 +17,7 @@ import { PRODUCTS, PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct 
 type Category = "ทั้งหมด" | ProductCategory;
 const CATEGORIES: Category[] = ["ทั้งหมด", "อาหารสุนัข", "อาหารแมว", "ขนม", "อาหารเสริม", "ของเล่น", "อุปกรณ์ดูแล", "ที่นอน & บ้าน"];
 
-const lineUrl = "https://line.me/R/ti/p/@porpaw";
+const lineUrl = "https://line.me/R/ti/p/@zoomiedash";
 
 function getLinkedCartId(productId: number, packageId: number) {
   return Array.from(`${productId}|${packageId}|with-package`).reduce(
@@ -79,7 +79,7 @@ function ShopContent() {
                 <Button component={Link} href="/#calculator" sx={{ color: DS.ink, border: "1px solid rgba(43,43,51,.18)", bgcolor: "rgba(255,255,255,.45)", borderRadius: DS.radius.pill, px: 2.5 }}>คำนวณอาหารก่อน</Button>
               </Box>
             </Box>
-            <Box sx={{ position: { xs: "absolute", md: "relative" }, right: { xs: -60, md: 0 }, bottom: { xs: -75, md: -35 }, height: { xs: 220, md: 330 }, opacity: { xs: .3, md: 1 } }}><Image src="/images/box4.webp" alt="กล่องสินค้า Porpaw" fill priority sizes="(max-width:900px) 240px,420px" style={{ objectFit: "contain", objectPosition: "center bottom" }} /></Box>
+            <Box sx={{ position: { xs: "absolute", md: "relative" }, right: { xs: -60, md: 0 }, bottom: { xs: -75, md: -35 }, height: { xs: 220, md: 330 }, opacity: { xs: .3, md: 1 } }}><Image src="/images/box4.webp" alt="กล่องสินค้า ZoomieDash" fill priority sizes="(max-width:900px) 240px,420px" style={{ objectFit: "contain", objectPosition: "center bottom" }} /></Box>
           </Box>
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3,1fr)" }, gap: 1.25, mt: 1.5 }}>

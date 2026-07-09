@@ -5,14 +5,15 @@ import { useRouter } from "next/navigation";
 import { Box, Button, Container, Typography } from "@mui/material";
 import {
   ArrowRight,
-  CalendarClock,
   Check,
+  Crown,
   MessageCircle,
   PackageCheck,
-  CalendarRange,
+  ShieldCheck,
 } from "lucide-react";
 import { DS } from "./DesignSystem";
-import { calculateSubscriptionPrice } from "../lib/subscriptionPricing";
+import { SUBSCRIPTION_TIERS } from "../lib/subscriptionPricing";
+import type { SubscriptionPlanName } from "../lib/subscriptionPricing";
 
 interface SubscriptionBannerProps {
   handleLineLogin: () => void;
@@ -21,48 +22,15 @@ interface SubscriptionBannerProps {
   nutrition?: {
     dailyGrams: number;
     dailyKcal: number;
-    recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+    recommendedPlan: SubscriptionPlanName;
   } | null;
 }
 
-const BENEFITS = ["ปริมาณพอดีกิน", "ปรับรอบส่งได้", "สะสมสิทธิพิเศษ"];
-
-const PLANS = [
-  {
-    icon: CalendarClock,
-    title: "Paw-Lite",
-    audience: "เริ่มทดลอง",
-    days: 15,
-    price: 690,
-    detail: "กล่องเล็ก ปรับง่าย เหมาะสำหรับเริ่มต้น",
-    value: "เริ่มง่าย",
-    highlight: false,
-  },
-  {
-    icon: PackageCheck,
-    title: "Paw-Fit",
-    audience: "แนะนำสำหรับส่วนใหญ่",
-    days: 30,
-    price: 1290,
-    detail: "ปริมาณพอดีตามที่กิน ดูแลง่ายทุกเดือน",
-    value: "ลงตัวที่สุด",
-    highlight: true,
-  },
-  {
-    icon: CalendarRange,
-    title: "Paw-Max",
-    audience: "เน้นความคุ้มค่า",
-    days: 45,
-    price: 1690,
-    detail: "กล่องใหญ่ ลดรอบส่ง ราคาต่อมื้อคุ้มกว่า",
-    value: "คุ้มที่สุด",
-    highlight: false,
-  },
-];
+const BENEFITS = ["รอบส่ง 1 เดือน", "เลือกเกรดอาหาร", "เลือกสูตรดูแล"];
+const TIER_ICONS = [PackageCheck, Crown, ShieldCheck] as const;
 
 export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
   handleLineLogin,
-  calculatedGrams,
   species = "dog",
   nutrition,
 }) => {
@@ -70,26 +38,19 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
 
   const plans = React.useMemo(
     () =>
-      PLANS.map((plan) => ({
+      SUBSCRIPTION_TIERS.map((plan, index) => ({
         ...plan,
-        highlight: nutrition ? plan.title === nutrition.recommendedPlan : plan.highlight,
-        amount: calculatedGrams
-          ? `${((calculatedGrams * plan.days) / 30 / 1000).toFixed(1)} กก./รอบ`
-          : null,
-        calculatedPrice: calculatedGrams
-          ? calculateSubscriptionPrice({
-              plan: plan.title as "Paw-Lite" | "Paw-Fit" | "Paw-Max",
-              species,
-              gramsPerRound: (calculatedGrams * plan.days) / 30,
-            })
-          : plan.price,
+        icon: TIER_ICONS[index] ?? PackageCheck,
+        title: plan.name,
+        highlight: nutrition ? plan.name === nutrition.recommendedPlan : plan.name === "Plus",
+        amount: nutrition ? `จัดชุดเกรด ${plan.name} สำหรับ 1 เดือน` : null,
+        calculatedPrice: plan.price,
       })),
-    [calculatedGrams, nutrition, species],
+    [nutrition],
   );
 
   const selectPlan = (title: string) => {
-    const grams = calculatedGrams ? `&grams=${calculatedGrams}` : "";
-    router.push(`/configure?plan=${title}&species=${species}${grams}`);
+    router.push(`/configure?plan=${title}&species=${species}`);
   };
 
   return (
@@ -147,7 +108,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
             <Typography
               sx={{ color: "#68646A", fontSize: { xs: 14.5, md: 16 }, fontWeight: 400, mt: 1, lineHeight: 1.6 }}
             >
-              เราจัดปริมาณให้พอดีและส่งตามรอบ คุณปรับเปลี่ยนได้ก่อนจัดส่งทุกครั้ง
+              รอบส่งมาตรฐาน 1 เดือน เลือกเกรดอาหารตามงบ แล้วเลือกสูตรดูแล เช่น บำรุงขน เสริมภูมิ คุมน้ำหนัก หรือแพ้ง่ายในขั้นตอนถัดไป
             </Typography>
           </Box>
 
@@ -173,7 +134,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                 {nutrition.dailyGrams.toLocaleString()} กรัม
               </Typography>
               <Typography sx={{ gridColumn: "1 / -1", color: "#B96449", fontSize: 12.5, fontWeight: 700, mt: 0.25 }}>
-                แนะนำ {nutrition.recommendedPlan} สำหรับผลคำนวณนี้
+                แนะนำเกรด {nutrition.recommendedPlan} สำหรับผลคำนวณนี้
               </Typography>
             </Box>
           ) : (
@@ -319,7 +280,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                         fontSize: 11.5,
                         fontWeight: 600,
                       }}
-                    >
+                      >
                       ราคาเริ่มต้น
                     </Typography>
                     <Typography sx={{ fontSize: 25, fontWeight: 800, letterSpacing: "-.025em", lineHeight: 1.15, mt: 0.2 }}>
@@ -334,7 +295,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
                       mb: 0.25,
                     }}
                   >
-                    / รอบส่ง
+                    / เดือน
                   </Typography>
                 </Box>
 
@@ -362,7 +323,7 @@ export const SubscriptionBanner: React.FC<SubscriptionBannerProps> = ({
         </Box>
 
         <Typography sx={{ color: DS.gray, fontSize: 11.5, textAlign: "center", mt: 1.75 }}>
-          *ราคาตัวอย่างสำหรับ Mockup ราคาจริงขึ้นอยู่กับปริมาณอาหารและสินค้าที่เลือก
+          *ทุกเกรดเป็นรอบ 1 เดือน สูตรดูแลจะแยกเลือกในหน้าจัดแพ็กเกจ
         </Typography>
 
         <Box

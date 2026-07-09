@@ -38,8 +38,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Brand */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
         <Image
-          src="/images/logo.png"
-          alt="Porpaw"
+          src="/images/logo_new1.png"
+          alt="ZoomieDash"
           width={1191}
           height={346}
           priority
@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             fontWeight: 400,
           }}
         >
-          พ.พาว
+          Pet Food Delivery
         </Typography>
       </Box>
 

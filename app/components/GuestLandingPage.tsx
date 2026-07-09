@@ -13,6 +13,7 @@ import { NutritionCalculator } from "./NutritionCalculator";
 import { Places } from "./Places";
 import { Healthcare } from "./Healthcare";
 import { Footer } from "./Footer";
+import type { SubscriptionPlanName } from "../lib/subscriptionPricing";
 
 interface GuestLandingPageProps {
   handleLineLogin: () => void;
@@ -28,7 +29,7 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
   const [nutrition, setNutrition] = useState<{
     dailyGrams: number;
     dailyKcal: number;
-    recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+    recommendedPlan: SubscriptionPlanName;
   } | null>(null);
 
   const handleNutritionCalculate = useCallback(
@@ -38,7 +39,7 @@ const GuestLandingPage: React.FC<GuestLandingPageProps> = ({
       nutritionResult: {
         dailyGrams: number;
         dailyKcal: number;
-        recommendedPlan: "Paw-Lite" | "Paw-Fit" | "Paw-Max";
+        recommendedPlan: SubscriptionPlanName;
       } | null,
     ) => {
       setCalculatedGrams(grams);
