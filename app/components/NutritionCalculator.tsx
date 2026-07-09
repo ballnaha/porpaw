@@ -614,7 +614,7 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                 value={weight}
                 onChange={setWeight}
                 unit="กก."
-                step={0.5}
+                step={0.1}
                 max={120}
                 ariaLabel="น้ำหนัก (กิโลกรัม)"
               />

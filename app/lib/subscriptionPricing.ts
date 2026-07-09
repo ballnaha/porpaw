@@ -1,5 +1,8 @@
 export type SubscriptionPlanName = "Essential" | "Plus" | "Premium";
 export type PetSpecies = "dog" | "cat";
+export type PetActivityLevel = "calm" | "normal" | "active";
+export type PetBodyGoal = "maintain" | "lose" | "gain";
+export type PetNeuterStatus = "intact" | "neutered";
 export type FormulaGoalKey =
   | "skin_coat"
   | "immunity"
@@ -30,6 +33,77 @@ const FORMULA_MULTIPLIER: Record<FormulaGoalKey, number> = {
 
 export const MONTHLY_DELIVERY_DAYS = 30;
 const PACKING_AND_DELIVERY = 160;
+const KCAL_PER_GRAM: Record<PetSpecies, number> = {
+  dog: 3.6,
+  cat: 3.6,
+};
+
+const SPECIES_MAINTENANCE_FACTOR: Record<PetSpecies, number> = {
+  dog: 1.6,
+  cat: 1.2,
+};
+
+const ACTIVITY_MULTIPLIER: Record<PetActivityLevel, number> = {
+  calm: 0.9,
+  normal: 1,
+  active: 1.2,
+};
+
+const BODY_GOAL_MULTIPLIER: Record<PetBodyGoal, number> = {
+  maintain: 1,
+  lose: 0.8,
+  gain: 1.2,
+};
+
+const NEUTERED_MULTIPLIER: Record<PetSpecies, Record<PetNeuterStatus, number>> = {
+  dog: { intact: 1, neutered: 0.85 },
+  cat: { intact: 1, neutered: 0.8 },
+};
+
+export const PET_WEIGHT_PRESETS = {
+  dog: [
+    { label: "เล็ก", detail: "ประมาณ 5 kg", weightKg: 5 },
+    { label: "กลาง", detail: "ประมาณ 15 kg", weightKg: 15 },
+    { label: "ใหญ่", detail: "ประมาณ 30 kg", weightKg: 30 },
+  ],
+  cat: [
+    { label: "เล็ก", detail: "ประมาณ 3 kg", weightKg: 3 },
+    { label: "มาตรฐาน", detail: "ประมาณ 4.5 kg", weightKg: 4.5 },
+    { label: "ตัวใหญ่", detail: "ประมาณ 6 kg", weightKg: 6 },
+  ],
+} as const satisfies Record<PetSpecies, ReadonlyArray<{
+  label: string;
+  detail: string;
+  weightKg: number;
+}>>;
+
+export const PET_ACTIVITY_OPTIONS = [
+  { key: "calm", label: "น้อย", detail: "นอนเป็นหลัก" },
+  { key: "normal", label: "ปกติ", detail: "เดินเล่นทุกวัน" },
+  { key: "active", label: "แอคทีฟมาก", detail: "ใช้พลังงานเยอะ" },
+] as const satisfies ReadonlyArray<{
+  key: PetActivityLevel;
+  label: string;
+  detail: string;
+}>;
+
+export const PET_BODY_GOAL_OPTIONS = [
+  { key: "maintain", label: "คงน้ำหนัก", detail: "กินตามพลังงานที่ใช้" },
+  { key: "lose", label: "ลดน้ำหนัก", detail: "ลดแคลอรี" },
+  { key: "gain", label: "เพิ่มน้ำหนัก", detail: "เพิ่มพลังงาน" },
+] as const satisfies ReadonlyArray<{
+  key: PetBodyGoal;
+  label: string;
+  detail: string;
+}>;
+
+export const PET_NEUTER_OPTIONS = [
+  { key: "intact", label: "ยังไม่ทำหมัน" },
+  { key: "neutered", label: "ทำหมันแล้ว" },
+] as const satisfies ReadonlyArray<{
+  key: PetNeuterStatus;
+  label: string;
+}>;
 
 export const SUBSCRIPTION_TIERS = [
   {
@@ -120,4 +194,77 @@ export function calculateSubscriptionPrice({
   const total = foodPrice + PACKING_AND_DELIVERY;
 
   return Math.max(290, Math.ceil(total / 10) * 10);
+}
+
+export function getPetLifeStage(species: PetSpecies, ageYears: number | null) {
+  if (!ageYears || ageYears <= 0) return { factor: SPECIES_MAINTENANCE_FACTOR[species], label: "วัยโต" };
+
+  if (species === "dog") {
+    if (ageYears < 4 / 12) return { factor: 3, label: "ลูกสุนัข < 4 เดือน" };
+    if (ageYears < 1) return { factor: 2, label: "ลูกสุนัขกำลังโต" };
+    if (ageYears >= 7) return { factor: 1.4, label: "วัยชรา" };
+  }
+
+  if (species === "cat") {
+    if (ageYears < 1) return { factor: 2.5, label: "ลูกแมวกำลังโต" };
+    if (ageYears >= 10) return { factor: 1.1, label: "วัยชรา" };
+  }
+
+  return { factor: SPECIES_MAINTENANCE_FACTOR[species], label: "วัยโต" };
+}
+
+export function calculateNutritionPlan({
+  species,
+  weightKg,
+  ageYears = null,
+  activity = "normal",
+  bodyGoal = "maintain",
+  neutered = "intact",
+}: {
+  species: PetSpecies;
+  weightKg: number;
+  ageYears?: number | null;
+  activity?: PetActivityLevel;
+  bodyGoal?: PetBodyGoal;
+  neutered?: PetNeuterStatus;
+}) {
+  const safeWeight = Math.max(1, weightKg);
+  const restingEnergy = 70 * Math.pow(safeWeight, 0.75);
+  const lifeStage = getPetLifeStage(species, ageYears);
+  const dailyKcal = Math.max(80, Math.round(
+    restingEnergy *
+    lifeStage.factor *
+    ACTIVITY_MULTIPLIER[activity] *
+    BODY_GOAL_MULTIPLIER[bodyGoal] *
+    NEUTERED_MULTIPLIER[species][neutered],
+  ));
+  const dailyGrams = Math.max(25, Math.round((dailyKcal / KCAL_PER_GRAM[species]) / 5) * 5);
+  const monthlyGrams = dailyGrams * MONTHLY_DELIVERY_DAYS;
+  const recommendedPlan: SubscriptionPlanName = bodyGoal === "lose"
+    ? "Plus"
+    : monthlyGrams < 3000
+      ? "Essential"
+      : monthlyGrams >= 12000
+        ? "Premium"
+        : "Plus";
+
+  return { dailyKcal, dailyGrams, monthlyGrams, lifeStage, recommendedPlan };
+}
+
+export function calculateDailyFoodGrams({
+  species,
+  weightKg,
+  ageYears = null,
+  activity = "normal",
+  bodyGoal = "maintain",
+  neutered = "intact",
+}: {
+  species: PetSpecies;
+  weightKg: number;
+  ageYears?: number | null;
+  activity?: PetActivityLevel;
+  bodyGoal?: PetBodyGoal;
+  neutered?: PetNeuterStatus;
+}) {
+  return calculateNutritionPlan({ species, weightKg, ageYears, activity, bodyGoal, neutered }).dailyGrams;
 }
