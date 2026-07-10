@@ -12,7 +12,8 @@ import { Footer } from "../../components/Footer";
 import { useCart } from "../../components/CartProvider";
 import { MobileBottomNav } from "../../components/MobileBottomNav";
 import { DS, theme } from "../../components/DesignSystem";
-import { PRODUCTS, PRODUCT_BADGE_COLORS, type ShopProduct } from "../../lib/productCatalog";
+import { useClientShopHydrated, useClientShopProducts } from "../../lib/clientProductStorage";
+import { PRODUCT_BADGE_COLORS, type ShopProduct } from "../../lib/productCatalog";
 
 function getLinkedCartId(productId: number, packageId: number) {
   return Array.from(`${productId}|${packageId}|with-package`).reduce(
@@ -21,18 +22,61 @@ function getLinkedCartId(productId: number, packageId: number) {
   );
 }
 
-export default function ProductDetailClient({ product, packageId }: { product: ShopProduct; packageId?: number }) {
+export default function ProductDetailClient({ product: initialProduct, slug, packageId }: { product: ShopProduct | null; slug: string; packageId?: number }) {
+  const allProducts = useClientShopProducts();
+  const clientShopHydrated = useClientShopHydrated();
+  const product = initialProduct ?? allProducts.find((item) => item.slug === slug) ?? null;
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const gallery = [product.image, "/images/box4.webp", "/images/delivery.webp"];
   const [activeImage, setActiveImage] = useState(0);
   const { addItem, items } = useCart();
+  const openLine = () => { window.location.href = "https://line.me/R/ti/p/@baebite"; };
+
+  if (!product && !clientShopHydrated) {
+    return <ThemeProvider theme={theme}>
+      <Sidebar sectionBase="/" activeItem="Shop" />
+      <Box sx={{ minHeight: "100vh", bgcolor: "#FCFBFA", color: DS.ink, pb: { xs: 10, md: 0 }, pl: { lg: "104px" } }}>
+        <Navbar handleLineLogin={openLine} isConnecting={false} />
+        <Container component="main" maxWidth="lg" sx={{ px: { xs: 2.5, sm: 3, lg: 1 }, py: { xs: 2.5, md: 4.5 } }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0,1fr) minmax(360px,.88fr)" }, gap: { xs: 3, md: 5 }, alignItems: "start" }}>
+            <Box sx={{ height: { xs: 360, sm: 480, md: 560 }, bgcolor: "#F3F0EC", borderRadius: { xs: "24px", md: "30px" }, border: `1px solid ${DS.line}` }} />
+            <Box sx={{ py: { md: 2 } }}>
+              <Box sx={{ width: 130, height: 18, bgcolor: "#F3F0EC", borderRadius: DS.radius.pill, mb: 1.5 }} />
+              <Box sx={{ width: "78%", height: 48, bgcolor: "#F3F0EC", borderRadius: "16px", mb: 1.4 }} />
+              <Box sx={{ width: "100%", height: 18, bgcolor: "#F3F0EC", borderRadius: DS.radius.pill, mb: .8 }} />
+              <Box sx={{ width: "88%", height: 18, bgcolor: "#F3F0EC", borderRadius: DS.radius.pill, mb: 2 }} />
+              <Typography sx={{ color: DS.gray, fontSize: 14.5, fontWeight: 700 }}>กำลังโหลดข้อมูลสินค้า...</Typography>
+            </Box>
+          </Box>
+        </Container>
+        <MobileBottomNav />
+      </Box>
+    </ThemeProvider>;
+  }
+
+  if (!product) {
+    return <ThemeProvider theme={theme}>
+      <Sidebar sectionBase="/" activeItem="Shop" />
+      <Box sx={{ minHeight: "100vh", bgcolor: "#FCFBFA", color: DS.ink, pb: { xs: 10, md: 0 }, pl: { lg: "104px" } }}>
+        <Navbar handleLineLogin={openLine} isConnecting={false} />
+        <Container component="main" maxWidth="sm" sx={{ px: { xs: 2.5, sm: 3 }, py: { xs: 5, md: 8 }, textAlign: "center" }}>
+          <Typography component="h1" sx={{ fontSize: { xs: 30, md: 40 }, fontWeight: 800 }}>ไม่พบสินค้า</Typography>
+          <Typography sx={{ color: DS.gray, fontSize: 15, lineHeight: 1.7, mt: 1 }}>สินค้าอาจถูกลบ หรือข้อมูลยังไม่ถูกบันทึกใน browser นี้</Typography>
+          <Button component={Link} href="/shop" sx={{ bgcolor: DS.ink, color: DS.white, borderRadius: DS.radius.pill, px: 2.5, py: 1.1, mt: 2.2, "&:hover": { bgcolor: "#44444D" } }}>กลับร้านค้า</Button>
+        </Container>
+        <MobileBottomNav />
+      </Box>
+    </ThemeProvider>;
+  }
+
+  const gallery = product.galleryImages?.length
+    ? Array.from(new Set([product.image, ...product.galleryImages]))
+    : [product.image, "/images/box4.webp", "/images/delivery.webp"];
   const targetPackage = packageId ? items.find((item) => item.id === packageId && item.packageContents) : undefined;
   const relatedProducts = [
-    ...PRODUCTS.filter((item) => item.category === product.category && item.id !== product.id),
-    ...PRODUCTS.filter((item) => item.category !== product.category && item.id !== product.id),
+    ...allProducts.filter((item) => item.category === product.category && item.id !== product.id),
+    ...allProducts.filter((item) => item.category !== product.category && item.id !== product.id),
   ].slice(0, 4);
-  const openLine = () => { window.location.href = "https://line.me/R/ti/p/@zoomiedash"; };
   const addToCart = () => {
     addItem(targetPackage ? {
       ...product,
@@ -73,7 +117,7 @@ export default function ProductDetailClient({ product, packageId }: { product: S
             <Box sx={{ position: "relative", height: { xs: 360, sm: 480, md: 560 }, bgcolor: product.color, borderRadius: { xs: "24px", md: "30px" }, overflow: "hidden" }}>
               {product.badge && <Chip label={product.badge} sx={{ position: "absolute", zIndex: 2, top: 18, left: 18, bgcolor: PRODUCT_BADGE_COLORS[product.badge]?.background ?? DS.white, color: PRODUCT_BADGE_COLORS[product.badge]?.color ?? DS.ink, border: `1px solid ${PRODUCT_BADGE_COLORS[product.badge]?.border ?? DS.line}`, fontSize: 13, fontWeight: 600, boxShadow: "0 5px 14px rgba(43,43,51,.08)" }} />}
               <IconButton aria-label="บันทึกสินค้า" sx={{ position: "absolute", zIndex: 2, top: 14, right: 14, bgcolor: "rgba(255,255,255,.82)", color: DS.ink, "&:hover": { bgcolor: DS.white, color: "#D35F69" } }}><Heart size={20} /></IconButton>
-              <Image key={gallery[activeImage]} src={gallery[activeImage]} alt={activeImage === 0 ? `${product.name} ${product.detail}` : `${product.name} ภาพประกอบ ${activeImage + 1}`} fill priority={activeImage === 0} sizes="(max-width:900px) 92vw,600px" style={{ objectFit: "contain", padding: "clamp(28px,6vw,70px)" }} />
+              <Image key={gallery[activeImage]} src={gallery[activeImage]} alt={activeImage === 0 ? `${product.name} ${product.detail}` : `${product.name} ภาพประกอบ ${activeImage + 1}`} fill priority={activeImage === 0} loading={activeImage === 0 ? "eager" : "lazy"} sizes="(max-width:900px) 92vw,600px" style={{ objectFit: "contain", padding: "clamp(28px,6vw,70px)" }} />
               <IconButton onClick={showPreviousImage} aria-label="ดูภาพก่อนหน้า" sx={{ position: "absolute", zIndex: 2, left: 14, top: "50%", transform: "translateY(-50%)", bgcolor: "rgba(255,255,255,.9)", color: DS.ink, boxShadow: "0 6px 18px rgba(43,43,51,.1)", "&:hover": { bgcolor: DS.white } }}><ChevronLeft size={20} /></IconButton>
               <IconButton onClick={showNextImage} aria-label="ดูภาพถัดไป" sx={{ position: "absolute", zIndex: 2, right: 14, top: "50%", transform: "translateY(-50%)", bgcolor: "rgba(255,255,255,.9)", color: DS.ink, boxShadow: "0 6px 18px rgba(43,43,51,.1)", "&:hover": { bgcolor: DS.white } }}><ChevronRight size={20} /></IconButton>
               <Box sx={{ position: "absolute", zIndex: 2, left: "50%", bottom: 15, transform: "translateX(-50%)", display: "flex", gap: .65 }}>{gallery.map((_, index) => <Box key={index} component="button" onClick={() => setActiveImage(index)} aria-label={`ดูภาพที่ ${index + 1}`} sx={{ width: activeImage === index ? 22 : 7, height: 7, border: 0, p: 0, borderRadius: DS.radius.pill, bgcolor: activeImage === index ? DS.ink : "rgba(43,43,51,.25)", cursor: "pointer", transition: "width .2s, background-color .2s" }} />)}</Box>

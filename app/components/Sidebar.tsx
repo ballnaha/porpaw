@@ -55,8 +55,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ sectionBase = "", activeItem =
       {/* Logo */}
       <Box
         component="a"
-        href={sectionHref("#top")}
-        aria-label="ZoomieDash"
+        href="/"
+        aria-label="baebite"
         sx={{
           width: 46,
           height: 46,
@@ -67,8 +67,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ sectionBase = "", activeItem =
         }}
       >
         <Image
-          src="/images/logo_icon.png"
-          alt="ZoomieDash"
+          src="/images/logo_icon3.png"
+          alt="baebite"
           width={512}
           height={512}
           priority

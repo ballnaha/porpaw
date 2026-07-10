@@ -11,6 +11,7 @@ export interface ShopProduct {
   price: number;
   oldPrice?: number;
   image: string;
+  galleryImages?: string[];
   color: string;
   badge?: string;
   rating: number;

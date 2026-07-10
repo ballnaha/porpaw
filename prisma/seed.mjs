@@ -29,9 +29,9 @@ async function hashPassword(password) {
 
 const prisma = new PrismaClient({ adapter: createMariaDbAdapter() });
 
-const email = (process.env.ADMIN_EMAIL ?? "admin@zoomiedash.local").trim().toLowerCase();
-const password = process.env.ADMIN_PASSWORD ?? "zoomiedash-admin";
-const name = process.env.ADMIN_NAME ?? "ZoomieDash Admin";
+const email = (process.env.ADMIN_EMAIL ?? "admin@baebite.com").trim().toLowerCase();
+const password = process.env.ADMIN_PASSWORD ?? "123456";
+const name = process.env.ADMIN_NAME ?? "BaeBite Admin";
 
 await prisma.user.upsert({
   where: { email },

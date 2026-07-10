@@ -11,7 +11,7 @@ const lineConfigured = Boolean(lineClientId && lineClientSecret);
 const authSecret =
   process.env.AUTH_SECRET ??
   process.env.NEXTAUTH_SECRET ??
-  (process.env.NODE_ENV === "production" ? undefined : "zoomiedash-development-secret-change-before-production");
+  (process.env.NODE_ENV === "production" ? undefined : "baebite-development-secret-change-before-production");
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -56,6 +56,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    Credentials({
+      id: "member-credentials",
+      name: "Member",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const username = String(credentials?.username ?? "").trim().toLowerCase();
+        const password = String(credentials?.password ?? "");
+
+        if (!username || !password) return null;
+
+        const user = await prisma.user.findUnique({ where: { email: username } });
+        const valid = await verifyPassword(password, user?.passwordHash);
+
+        if (!user || !valid || user.role !== "USER") return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+        };
+      },
+    }),
     ...(process.env.NODE_ENV !== "production"
       ? [
           Credentials({
@@ -64,11 +91,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             credentials: {},
             async authorize() {
               return prisma.user.upsert({
-                where: { email: "dev-line@zoomiedash.local" },
+                where: { email: "dev-line@baebite.local" },
                 update: { name: "LINE Dev User", role: "USER" },
                 create: {
                   name: "LINE Dev User",
-                  email: "dev-line@zoomiedash.local",
+                  email: "dev-line@baebite.local",
                   role: "USER",
                 },
               });

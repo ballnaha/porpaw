@@ -1,5 +1,8 @@
 import { AdminModulePlaceholder } from "../_components/AdminModulePlaceholder";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function AdminUsersPage() {
   return (
     <AdminModulePlaceholder
@@ -10,7 +13,7 @@ export default function AdminUsersPage() {
       rows={[
         { name: "LINE Dev User", meta: "dev-line-user", status: "เปิดใช้งาน", accent: "#EEF7F0" },
         { name: "Awaiting LINE Login", meta: "รอสมาชิกเชื่อมบัญชีจริง", status: "Draft", accent: "#FFF8E7" },
-        { name: "Admin", meta: "ZoomieDash internal account", status: "เปิดใช้งาน", accent: "#F1EEFA" },
+        { name: "Admin", meta: "baebite internal account", status: "เปิดใช้งาน", accent: "#F1EEFA" },
       ]}
     />
   );

@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Box, Container, Typography } from "@mui/material";
 import { AtSign, Mail, MessageCircle } from "lucide-react";
 import { DS } from "./DesignSystem";
@@ -9,7 +10,7 @@ const FOOTER_LINKS = [
   { label: "Subscription", href: "#promo" },
   { label: "Places", href: "#explore" },
   { label: "Vet & Care", href: "#care" },
-  { label: "ติดต่อเรา", href: "mailto:hello@zoomiedash.co" },
+  { label: "ติดต่อเรา", href: "mailto:hello@baebite.co" },
 ];
 
 const linkStyle = {
@@ -44,19 +45,21 @@ export const Footer: React.FC = () => {
           }}
         >
           {/* Logo & Brand Name */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Image
-              src="/images/logo_new1.png"
-              alt="ZoomieDash"
-              width={1191}
-              height={346}
-              style={{
-                width: "auto",
-                height: "26px",
-                objectFit: "contain",
-              }}
-            />
-          </Box>
+          <Link href="/" aria-label="ไปหน้าแรก" style={{ textDecoration: "none" }}>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Image
+                src="/images/logo_new6.png"
+                alt="baebite"
+                width={1191}
+                height={346}
+                style={{
+                  width: "auto",
+                  height: "26px",
+                  objectFit: "contain",
+                }}
+              />
+            </Box>
+          </Link>
 
           {/* Minimal Inline Links */}
           <Box
@@ -79,7 +82,7 @@ export const Footer: React.FC = () => {
             {[
               { label: "Social", icon: AtSign, href: "#top" },
               { label: "Chat", icon: MessageCircle, href: "#top" },
-              { label: "Email", icon: Mail, href: "mailto:hello@zoomiedash.co" },
+              { label: "Email", icon: Mail, href: "mailto:hello@baebite.co" },
             ].map(({ label, icon: Icon, href }) => (
               <Box
                 component="a"
@@ -111,7 +114,7 @@ export const Footer: React.FC = () => {
           }}
         >
           <Typography sx={{ color: "#A1A1AA", fontSize: 11 }}>
-            © 2026 ZoomieDash. All rights reserved.
+            © 2026 baebite. All rights reserved.
           </Typography>
           <Box sx={{ display: "flex", gap: 2.5 }}>
             <Box component="a" href="#top" sx={{ ...linkStyle, fontSize: 11, fontWeight: 500 }}>

@@ -12,12 +12,13 @@ import { Footer } from "../components/Footer";
 import { DS, theme } from "../components/DesignSystem";
 import { useCart } from "../components/CartProvider";
 import { MobileBottomNav } from "../components/MobileBottomNav";
-import { PRODUCTS, PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../lib/productCatalog";
+import { useClientShopProducts } from "../lib/clientProductStorage";
+import { PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../lib/productCatalog";
 
 type Category = "ทั้งหมด" | ProductCategory;
 const CATEGORIES: Category[] = ["ทั้งหมด", "อาหารสุนัข", "อาหารแมว", "ขนม", "อาหารเสริม", "ของเล่น", "อุปกรณ์ดูแล", "ที่นอน & บ้าน"];
 
-const lineUrl = "https://line.me/R/ti/p/@zoomiedash";
+const lineUrl = "https://line.me/R/ti/p/@baebite";
 
 function getLinkedCartId(productId: number, packageId: number) {
   return Array.from(`${productId}|${packageId}|with-package`).reduce(
@@ -30,11 +31,12 @@ function ShopContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addItem, items, recentlyAddedId } = useCart();
+  const allProducts = useClientShopProducts();
   const requestedCategory = searchParams.get("category");
   const category: Category = CATEGORIES.includes(requestedCategory as Category)
     ? requestedCategory as Category
     : "ทั้งหมด";
-  const products = PRODUCTS.filter((product) => category === "ทั้งหมด" || product.category === category);
+  const products = allProducts.filter((product) => category === "ทั้งหมด" || product.category === category);
   const requestedPackageId = Number(searchParams.get("packageId"));
   const targetPackage = Number.isFinite(requestedPackageId)
     ? items.find((item) => item.id === requestedPackageId && item.packageContents)
@@ -79,7 +81,7 @@ function ShopContent() {
                 <Button component={Link} href="/#calculator" sx={{ color: DS.ink, border: "1px solid rgba(43,43,51,.18)", bgcolor: "rgba(255,255,255,.45)", borderRadius: DS.radius.pill, px: 2.5 }}>คำนวณอาหารก่อน</Button>
               </Box>
             </Box>
-            <Box sx={{ position: { xs: "absolute", md: "relative" }, right: { xs: -60, md: 0 }, bottom: { xs: -75, md: -35 }, height: { xs: 220, md: 330 }, opacity: { xs: .3, md: 1 } }}><Image src="/images/box4.webp" alt="กล่องสินค้า ZoomieDash" fill priority sizes="(max-width:900px) 240px,420px" style={{ objectFit: "contain", objectPosition: "center bottom" }} /></Box>
+            <Box sx={{ position: { xs: "absolute", md: "relative" }, right: { xs: -60, md: 0 }, bottom: { xs: -75, md: -35 }, height: { xs: 220, md: 330 }, opacity: { xs: .3, md: 1 } }}><Image src="/images/box4.webp" alt="กล่องสินค้า baebite" fill priority sizes="(max-width:900px) 240px,420px" style={{ objectFit: "contain", objectPosition: "center bottom" }} /></Box>
           </Box>
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3,1fr)" }, gap: 1.25, mt: 1.5 }}>

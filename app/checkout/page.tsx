@@ -13,7 +13,7 @@ import { DS, theme } from "../components/DesignSystem";
 import { useCart } from "../components/CartProvider";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 
-const lineUrl = "https://line.me/R/ti/p/@zoomiedash";
+const lineUrl = "https://line.me/R/ti/p/@baebite";
 const fieldSx = { "& .MuiOutlinedInput-root": { bgcolor: DS.white, borderRadius: "14px", "& fieldset": { borderColor: DS.line }, "&:hover fieldset": { borderColor: DS.peach }, "&.Mui-focused fieldset": { borderColor: DS.peach } }, "& .MuiInputLabel-root.Mui-focused": { color: "#B96449" } };
 
 function StepHeader({ number, title, icon: Icon }: { number: number; title: string; icon: typeof MapPin }) {

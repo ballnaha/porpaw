@@ -32,15 +32,15 @@ export default async function AccountPage() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 2, minWidth: 0 }}>
               <Box sx={{ position: "relative", width: 82, height: 82, display: "grid", placeItems: "center", bgcolor: DS.peachSoft, color: "#B96449", borderRadius: "26px", overflow: "hidden", border: "4px solid white", boxShadow: "0 10px 22px rgba(43,43,51,.08)" }}>
                 {session.user.image ? (
-                  <Image src={session.user.image} alt={session.user.name ?? "ZoomieDash user"} fill sizes="82px" style={{ objectFit: "cover" }} />
+                  <Image src={session.user.image} alt={session.user.name ?? "baebite user"} fill sizes="82px" style={{ objectFit: "cover" }} />
                 ) : (
                   <UserRound size={34} />
                 )}
               </Box>
               <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ color: "#B96449", fontSize: 12, fontWeight: 900, letterSpacing: ".1em" }}>ZOOMIEDASH ACCOUNT</Typography>
+                <Typography sx={{ color: "#B96449", fontSize: 12, fontWeight: 900, letterSpacing: ".1em" }}>baebite ACCOUNT</Typography>
                 <Typography component="h1" sx={{ fontSize: { xs: 30, sm: 40 }, fontWeight: 900, lineHeight: 1.08, letterSpacing: "-.02em", mt: .35 }}>
-                  {session.user.name ?? "ZoomieDash User"}
+                  {session.user.name ?? "baebite User"}
                 </Typography>
                 <Typography sx={{ color: DS.gray, fontSize: 13.5, mt: .3 }}>สิทธิ์บัญชี {session.user.role === "ADMIN" ? "Admin" : "LINE Member"}</Typography>
               </Box>

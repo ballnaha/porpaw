@@ -8,7 +8,7 @@ import { DS } from "../../components/DesignSystem";
 type AdminModulePlaceholderProps = {
   title: string;
   detail: string;
-  active: "packages" | "recipes" | "users";
+  active: "shop" | "packages" | "recipes" | "users";
   primaryAction: string;
   rows: Array<{
     name: string;
@@ -24,7 +24,7 @@ export async function AdminModulePlaceholder({ title, detail, active, primaryAct
   if (session?.user.role !== "ADMIN") redirect("/admin/login");
 
   return (
-    <AdminChrome title={title} detail={detail} userName={session.user.name ?? "ZoomieDash Admin"} active={active}>
+    <AdminChrome title={title} detail={detail} userName={session.user.name ?? "baebite Admin"} active={active}>
       <Box sx={{ display: "grid", gap: 1.5 }}>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1.25, flexWrap: "wrap", bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "22px", p: { xs: 1.5, md: 1.8 } }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, minWidth: { xs: "100%", sm: 260 }, color: DS.gray, bgcolor: "#F8F7F5", border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, px: 1.5, py: 1.05 }}>

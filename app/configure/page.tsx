@@ -45,6 +45,35 @@ function stepNumericValue(value: string, fallback: number, delta: number, min: n
   return formatNumericValue(next);
 }
 
+function getGoalDisplay(goal: (typeof FORMULA_GOALS)[number], bodyGoal: PetBodyGoal) {
+  if (goal.key !== "weight") return goal;
+
+  if (bodyGoal === "gain") {
+    return {
+      ...goal,
+      title: "เพิ่มน้ำหนักสมดุล",
+      detail: "เพิ่มพลังงานและโปรตีนให้เหมาะกับรูปร่าง",
+      formulaLabel: "สูตรเพิ่มน้ำหนักอย่างสมดุล",
+    };
+  }
+
+  if (bodyGoal === "lose") {
+    return {
+      ...goal,
+      title: "ลดน้ำหนัก",
+      detail: "ลดพลังงานแต่ยังอิ่มและได้สารอาหารครบ",
+      formulaLabel: "สูตรลดน้ำหนัก",
+    };
+  }
+
+  return {
+    ...goal,
+    title: "ดูแลรูปร่าง",
+    detail: "คุมพลังงานและรูปร่างให้เหมาะสม",
+    formulaLabel: "สูตรดูแลรูปร่าง",
+  };
+}
+
 function Dashboard() {
   const router = useRouter();
   const search = useSearchParams();
@@ -64,8 +93,11 @@ function Dashboard() {
   const plan = useMemo(() => SUBSCRIPTION_TIERS.find((item) => item.name === planName) || SUBSCRIPTION_TIERS[1], [planName]);
   const goals = FORMULA_GOALS;
   const selectedGoal = goals[focus];
+  const displayGoals = useMemo(() => goals.map((goal) => getGoalDisplay(goal, bodyGoal)), [goals, bodyGoal]);
+  const selectedGoalDisplay = displayGoals[focus];
   const weightKg = Math.max(0, Number.parseFloat(petWeight) || 0);
   const ageYears = Number.parseFloat(petAge);
+  const hasPetBasics = weightKg > 0 && Number.isFinite(ageYears) && ageYears > 0;
   const nutrition = calculateNutritionPlan({
     species,
     weightKg,
@@ -90,11 +122,14 @@ function Dashboard() {
   const adjustPetAge = (delta: number) => setPetAge((value) =>
     stepNumericValue(value, 0, delta, 0, 25),
   );
+  const lockedStepMessage = "กรอกน้ำหนักและอายุใน step 2 ก่อนเลือกขั้นตอนนี้";
   const summaryItems = [
     [
       `อาหารหลักเกรด ${plan.name}`,
-      selectedGoal.formulaLabel,
-      `${monthlyKg.toFixed(1)} kg / ${MONTHLY_DELIVERY_DAYS} วัน • ${dailyGrams} g ต่อวัน`,
+      selectedGoalDisplay.formulaLabel,
+      hasPetBasics
+        ? `${monthlyKg.toFixed(1)} kg / ${MONTHLY_DELIVERY_DAYS} วัน • ${dailyGrams} g ต่อวัน`
+        : "รอข้อมูลน้ำหนักและอายุ",
       species === "dog" ? "/images/food_dog.webp" : "/images/food_cat.webp",
       "1",
     ],
@@ -103,6 +138,8 @@ function Dashboard() {
     ["ของเล่นเสริมพัฒนาการ", species === "dog" ? "เชือกกัด & ลูกบอลนุ่ม" : "บอลแคทนิป & ไม้มาทาทาบิ", "", "/images/toy2.webp", "2"],
   ];
   const addPackageToCart = () => {
+    if (!hasPetBasics) return;
+
     const packageKey = `${plan.name}|${species}|${selectedGoal.key}|${weightKg}|${activity}|${bodyGoal}|${neutered}`;
     const packageId = Array.from(packageKey).reduce(
       (hash, character) => (hash * 31 + character.charCodeAt(0)) >>> 0,
@@ -111,11 +148,11 @@ function Dashboard() {
     if (Number.isFinite(editingPackageId) && editingPackageId > 0) removeItem(editingPackageId);
     addItem({
       id: packageId,
-      name: `แพ็กเกจ ${plan.name} • ${selectedGoal.title}`,
+      name: `แพ็กเกจ ${plan.name} • ${selectedGoalDisplay.title}`,
       price: totalPrice,
       image: plan.image,
       petType: species,
-      weight: `เกรด ${plan.name} • ${selectedGoal.title} • ${monthlyKg.toFixed(1)} kg / ${MONTHLY_DELIVERY_DAYS} วัน`,
+      weight: `เกรด ${plan.name} • ${selectedGoalDisplay.title} • ${monthlyKg.toFixed(1)} kg / ${MONTHLY_DELIVERY_DAYS} วัน`,
       packageContents: summaryItems.map((item) =>
         [item[0], item[1], item[2], `x${item[4]}`].filter(Boolean).join(" • "),
       ),
@@ -127,7 +164,7 @@ function Dashboard() {
     <Sidebar sectionBase="/" />
     <Box sx={{ minHeight: "100vh", overflowX: "hidden", pl: { lg: "104px" } }}>
       <Navbar
-        handleLineLogin={() => { window.location.href = "https://line.me/R/ti/p/@zoomiedash"; }}
+        handleLineLogin={() => { window.location.href = "https://line.me/R/ti/p/@baebite"; }}
         isConnecting={false}
       />
       <main className={`${styles.page} ${readabilityStyles.readable}`}>
@@ -153,57 +190,79 @@ function Dashboard() {
 
         <div className={styles.panel}>
           <StepTitle number={2} title="คำนวณโภชนาการของน้อง" subtitle="กรอกข้อมูลหลักเพื่อคำนวณกรัมต่อวัน พลังงาน และปริมาณต่อเดือน" />
-          <div className={styles.nutritionInputs}>
-            <div className={styles.stepperField}>
-              <span>น้ำหนัก</span>
-              <button type="button" onClick={() => adjustPetWeight(-0.1)} aria-label="ลดน้ำหนัก"><Minus size={15} /></button>
-              <input className={styles.numberInput} value={petWeight} onChange={(event) => setPetWeight(event.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" aria-label="น้ำหนักกิโลกรัม" />
-              <small>kg</small>
-              <button type="button" onClick={() => adjustPetWeight(0.1)} aria-label="เพิ่มน้ำหนัก"><Plus size={15} /></button>
+          <div className={styles.nutritionDesigner}>
+            <div className={styles.nutritionBlock}>
+              <div className={styles.nutritionBlockHeader}>
+                <span>ข้อมูลพื้นฐาน</span>
+                <small>ใช้เป็นฐานคำนวณพลังงานต่อวัน</small>
+              </div>
+              <div className={styles.nutritionInputs}>
+                <div className={styles.stepperField}>
+                  <span>น้ำหนัก</span>
+                  <button type="button" onClick={() => adjustPetWeight(-0.1)} aria-label="ลดน้ำหนัก"><Minus size={15} /></button>
+                  <input className={styles.numberInput} value={petWeight} onChange={(event) => setPetWeight(event.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" aria-label="น้ำหนักกิโลกรัม" />
+                  <small>kg</small>
+                  <button type="button" onClick={() => adjustPetWeight(0.1)} aria-label="เพิ่มน้ำหนัก"><Plus size={15} /></button>
+                </div>
+                <div className={styles.stepperField}>
+                  <span>อายุ</span>
+                  <button type="button" onClick={() => adjustPetAge(-0.1)} aria-label="ลดอายุ"><Minus size={15} /></button>
+                  <input className={styles.numberInput} value={petAge} onChange={(event) => setPetAge(event.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" aria-label="อายุปี" />
+                  <small>ปี</small>
+                  <button type="button" onClick={() => adjustPetAge(0.1)} aria-label="เพิ่มอายุ"><Plus size={15} /></button>
+                </div>
+              </div>
             </div>
-            <div className={styles.stepperField}>
-              <span>อายุ</span>
-              <button type="button" onClick={() => adjustPetAge(-0.1)} aria-label="ลดอายุ"><Minus size={15} /></button>
-              <input className={styles.numberInput} value={petAge} onChange={(event) => setPetAge(event.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" aria-label="อายุปี" />
-              <small>ปี</small>
-              <button type="button" onClick={() => adjustPetAge(0.1)} aria-label="เพิ่มอายุ"><Plus size={15} /></button>
+
+            <div className={styles.nutritionDecisionGrid}>
+              <div className={styles.nutritionBlock}>
+                <div className={styles.nutritionBlockHeader}>
+                  <span><Scale size={16} />ระดับกิจกรรม</span>
+                  <small>บอกว่าน้องใช้พลังงานมากแค่ไหน</small>
+                </div>
+                <div className={styles.optionGrid}>{PET_ACTIVITY_OPTIONS.map((item) => <button key={item.key} className={`${styles.optionButton} ${activity === item.key ? styles.optionSelected : ""}`} onClick={() => setActivity(item.key)} type="button">
+                  <strong>{item.label}</strong><small>{item.detail}</small>
+                </button>)}</div>
+              </div>
+              <div className={styles.nutritionBlock}>
+                <div className={styles.nutritionBlockHeader}>
+                  <span>เป้าหมายน้ำหนัก</span>
+                  <small>ปรับปริมาณอาหารตามทิศทางรูปร่าง</small>
+                </div>
+                <div className={styles.optionGrid}>{PET_BODY_GOAL_OPTIONS.map((item) => <button key={item.key} className={`${styles.optionButton} ${bodyGoal === item.key ? styles.optionSelected : ""}`} onClick={() => setBodyGoal(item.key)} type="button">
+                  <strong>{item.label}</strong><small>{item.detail}</small>
+                </button>)}</div>
+              </div>
+            </div>
+
+            <div className={`${styles.nutritionBlock} ${styles.neuterBlock}`}>
+              <div className={styles.nutritionBlockHeader}>
+                <span>สถานะทำหมัน</span>
+                <small>ช่วยปรับพลังงานให้เหมาะกับ metabolism</small>
+              </div>
+              <div className={styles.neuterToggle}>{PET_NEUTER_OPTIONS.map((item) => <button key={item.key} type="button" className={neutered === item.key ? styles.neuterSelected : ""} onClick={() => setNeutered(item.key)}>{item.label}</button>)}</div>
             </div>
           </div>
-          <div className={styles.portionGrid}>
-            <div className={styles.portionGroup}>
-              <h3><Scale size={17} />ระดับกิจกรรม</h3>
-              <div className={styles.optionGrid}>{PET_ACTIVITY_OPTIONS.map((item) => <button key={item.key} className={`${styles.optionButton} ${activity === item.key ? styles.optionSelected : ""}`} onClick={() => setActivity(item.key)} type="button">
-                <strong>{item.label}</strong><small>{item.detail}</small>
-              </button>)}</div>
-            </div>
-            <div className={styles.portionGroup}>
-              <h3>เป้าหมายน้ำหนัก</h3>
-              <div className={styles.optionGrid}>{PET_BODY_GOAL_OPTIONS.map((item) => <button key={item.key} className={`${styles.optionButton} ${bodyGoal === item.key ? styles.optionSelected : ""}`} onClick={() => setBodyGoal(item.key)} type="button">
-                <strong>{item.label}</strong><small>{item.detail}</small>
-              </button>)}</div>
-            </div>
-          </div>
-          <div className={styles.neuterToggle}>{PET_NEUTER_OPTIONS.map((item) => <button key={item.key} type="button" className={neutered === item.key ? styles.neuterSelected : ""} onClick={() => setNeutered(item.key)}>{item.label}</button>)}</div>
-          <div className={styles.portionResult}>
-            <span><b>{dailyGrams} g</b><small>ต่อวัน</small></span>
-            <span><b>{nutrition.dailyKcal.toLocaleString()} kcal</b><small>พลังงานต่อวัน</small></span>
-            <span><b>{monthlyKg.toFixed(1)} kg</b><small>ต่อ {MONTHLY_DELIVERY_DAYS} วัน</small></span>
-            <p>{nutrition.lifeStage.label} • ราคาแพ็กเกจคำนวณจากปริมาณอาหารจริงของน้อง</p>
+          <div className={`${styles.portionResult} ${!hasPetBasics ? styles.portionResultWaiting : ""}`}>
+            <span><b>{hasPetBasics ? `${dailyGrams} g` : "--"}</b><small>ต่อวัน</small></span>
+            <span><b>{hasPetBasics ? `${nutrition.dailyKcal.toLocaleString()} kcal` : "--"}</b><small>พลังงานต่อวัน</small></span>
+            <span><b>{hasPetBasics ? `${monthlyKg.toFixed(1)} kg` : "--"}</b><small>ต่อ {MONTHLY_DELIVERY_DAYS} วัน</small></span>
+            <p>{hasPetBasics ? `${nutrition.lifeStage.label} • ราคาแพ็กเกจคำนวณจากปริมาณอาหารจริงของน้อง` : "กรอกน้ำหนักและอายุของน้องก่อน เพื่อปลดล็อกการเลือกเกรดอาหารและสูตรดูแล"}</p>
           </div>
         </div>
-        <div className={styles.panel}>
-          <StepTitle number={3} title="เลือกเกรดอาหาร" subtitle="รอบส่งตายตัว 1 เดือน แยกราคาตามคุณภาพวัตถุดิบ" />
-          <div className={styles.planList}>{SUBSCRIPTION_TIERS.map((item) => <button key={item.name} style={{ "--package-accent": item.accent, "--package-tint": item.tint, "--package-image-tint": item.imageTint } as CSSProperties} className={`${styles.plan} ${packageStyles.packageCard} ${planName === item.name ? `${styles.planSelected} ${packageStyles.packageSelected}` : ""}`} onClick={() => setPlanName(item.name)}>
+        <div className={`${styles.panel} ${!hasPetBasics ? styles.lockedPanel : ""}`}>
+          <StepTitle number={3} title="เลือกเกรดอาหาร" subtitle={hasPetBasics ? "รอบส่งตายตัว 1 เดือน แยกราคาตามคุณภาพวัตถุดิบ" : lockedStepMessage} />
+          <div className={styles.planList}>{SUBSCRIPTION_TIERS.map((item) => <button key={item.name} disabled={!hasPetBasics} style={{ "--package-accent": item.accent, "--package-tint": item.tint, "--package-image-tint": item.imageTint } as CSSProperties} className={`${styles.plan} ${packageStyles.packageCard} ${planName === item.name ? `${styles.planSelected} ${packageStyles.packageSelected}` : ""}`} onClick={() => setPlanName(item.name)}>
             <span className={`${styles.radio} ${packageStyles.packageRadio}`}>{planName === item.name && <i />}</span>
             <div className={`${styles.planImage} ${packageStyles.packageImage}`}><Image src={item.image} alt="" fill sizes="190px" /></div>
             <div className={styles.planCopy}><h3>{item.name} {item.name === "Plus" && <Crown size={20} />}</h3><p>{item.detail}</p><div>{item.features.map((feature) => <span key={feature}><Check size={12} />{feature}</span>)}</div></div>
-            <div className={styles.price}><strong>฿{getPlanPrice(item).toLocaleString()}</strong><span>/ เดือน</span><small>ส่งทุก {item.days} วัน</small>{item.badge && <em>{item.badge}</em>}</div>
+            <div className={styles.price}><strong>{hasPetBasics ? `฿${getPlanPrice(item).toLocaleString()}` : "--"}</strong><span>/ เดือน</span><small>ส่งทุก {item.days} วัน</small>{item.badge && <em>{item.badge}</em>}</div>
           </button>)}</div>
         </div>
 
-        <div className={styles.panel}>
-          <StepTitle number={4} title="เลือกสูตรดูแล" subtitle="เลือกเป้าหมายสุขภาพแยกจากเกรดอาหาร" />
-          <div className={styles.focusGrid}>{goals.map((item, index) => <button key={item.title} className={focus === index ? styles.focusSelected : ""} onClick={() => setFocus(index)}>
+        <div className={`${styles.panel} ${!hasPetBasics ? styles.lockedPanel : ""}`}>
+          <StepTitle number={4} title="เลือกสูตรดูแล" subtitle={hasPetBasics ? "สูตรรูปร่างจะปรับแนวทางตามเป้าหมายน้ำหนักที่เลือก" : lockedStepMessage} />
+          <div className={styles.focusGrid}>{displayGoals.map((item, index) => <button key={item.key} disabled={!hasPetBasics} className={focus === index ? styles.focusSelected : ""} onClick={() => setFocus(index)}>
             <div><Image src={item.image} alt="" fill sizes="90px" /></div><span><strong>{item.title}</strong><small>{item.detail}</small></span>
           </button>)}</div>
         </div>
@@ -217,17 +276,17 @@ function Dashboard() {
           >
             เกรด {plan.name}
           </strong>
-          <span className={packageStyles.selectedFocus}>สูตร: {selectedGoal.title} • รอบ 1 เดือน</span>
+          <span className={packageStyles.selectedFocus}>สูตร: {selectedGoalDisplay.title} • รอบ 1 เดือน</span>
         </header>
-        <div className={styles.heroBox}><Image src="/images/box4.webp" alt="กล่อง ZoomieDash" fill priority sizes="450px" /></div>
+        <div className={styles.heroBox}><Image src="/images/box4.webp" alt="กล่อง baebite" fill priority sizes="450px" /></div>
         <div className={styles.itemList}>{summaryItems.map((item) => <div className={styles.item} key={item[0]}>
           <div className={styles.itemImage}><Image src={item[3]} alt="" fill sizes="65px" /></div><span><strong>{item[0]}</strong><small>{item[1]}</small><small>{item[2]}</small></span><b>x{item[4]}</b>
         </div>)}</div>
         <div className={styles.delivery}><Truck /><span><strong>จัดส่งฟรีทั่วประเทศ</strong><small>ส่งทุก {MONTHLY_DELIVERY_DAYS} วัน • แก้สูตรได้ก่อนรอบถัดไป</small></span></div>
-        <div className={styles.total}><span><b>รวมทั้งหมด</b><strong>฿{totalPrice.toLocaleString()} <small>/ เดือน</small></strong><em>เฉลี่ยวันละ ฿{Math.round(totalPrice / MONTHLY_DELIVERY_DAYS)}</em></span><i>{plan.badge || "เริ่มง่าย"}</i></div>
-        <button className={styles.packageCartButton} type="button" onClick={addPackageToCart} aria-label={`เพิ่มแพ็กเกจ ${plan.name} สูตร ${selectedGoal.title} ลงตะกร้า`}>
+        <div className={styles.total}><span><b>รวมทั้งหมด</b><strong>{hasPetBasics ? `฿${totalPrice.toLocaleString()}` : "--"} <small>/ เดือน</small></strong><em>{hasPetBasics ? `เฉลี่ยวันละ ฿${Math.round(totalPrice / MONTHLY_DELIVERY_DAYS)}` : "รอข้อมูล step 2"}</em></span><i>{plan.badge || "เริ่มง่าย"}</i></div>
+        <button className={styles.packageCartButton} type="button" disabled={!hasPetBasics} onClick={addPackageToCart} aria-label={hasPetBasics ? `เพิ่มแพ็กเกจ ${plan.name} สูตร ${selectedGoalDisplay.title} ลงตะกร้า` : lockedStepMessage}>
           <span>
-            <strong>เพิ่มแพ็กเกจลงตะกร้า</strong>
+            <strong>{hasPetBasics ? "เพิ่มแพ็กเกจลงตะกร้า" : "กรอก step 2 ก่อน"}</strong>
           </span>
           <b><ShoppingCart size={18} /></b>
         </button>

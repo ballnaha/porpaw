@@ -14,7 +14,7 @@ import { useCart } from "../components/CartProvider";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { PackageAddOnDialog } from "./PackageAddOnDialog";
 
-const lineUrl = "https://line.me/R/ti/p/@zoomiedash";
+const lineUrl = "https://line.me/R/ti/p/@baebite";
 
 export default function CartPage() {
   const { items, subtotal, updateQuantity, removeItem } = useCart();

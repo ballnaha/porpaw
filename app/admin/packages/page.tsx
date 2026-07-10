@@ -1,5 +1,8 @@
 import { AdminModulePlaceholder } from "../_components/AdminModulePlaceholder";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function AdminPackagesPage() {
   return (
     <AdminModulePlaceholder

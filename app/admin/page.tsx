@@ -1,11 +1,15 @@
 import { Box, Button, Typography } from "@mui/material";
-import { ArrowRight, BookOpenText, CircleDollarSign, Package, ShieldCheck, UsersRound } from "lucide-react";
+import { ArrowRight, BookOpenText, CircleDollarSign, Package, ShieldCheck, ShoppingBag, UsersRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AdminChrome } from "./_components/AdminChrome";
 import { DS } from "../components/DesignSystem";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const adminCards = [
+  { title: "Shop Products", detail: "เพิ่มสินค้าและกำหนดข้อมูลที่แสดงในหน้าร้านและหน้ารายละเอียดสินค้า", icon: ShoppingBag, href: "/admin/shop", count: "10 items", color: "#B96449", bg: "#FFF7F3" },
   { title: "Package Tier", detail: "จัดเกรดอาหาร Essential, Plus, Premium รอบส่ง 1 เดือน", icon: Package, href: "/admin/packages", count: "3 tiers", color: "#568768", bg: "#EEF7F0" },
   { title: "สูตรดูแล", detail: "จัดสูตรบำรุงขน เสริมภูมิ ระบบย่อย คุมน้ำหนัก สูงวัย แพ้ง่าย", icon: BookOpenText, href: "/admin/recipes", count: "6 goals", color: "#B96449", bg: "#FFF7F3" },
   { title: "Users", detail: "ดู LINE account, package tier, สูตรที่เลือก และสิทธิ์รายคน", icon: UsersRound, href: "/admin/users", count: "0 active", color: "#6D5EA8", bg: "#F1EEFA" },
@@ -26,7 +30,7 @@ export default async function AdminPage() {
     <AdminChrome
       title="Dashboard"
       detail="ศูนย์กลางสำหรับจัด package tier, สูตรดูแล และสิทธิ์ผู้ใช้ผ่าน LINE account"
-      userName={session.user.name ?? "ZoomieDash Admin"}
+      userName={session.user.name ?? "baebite Admin"}
       active="dashboard"
     >
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1.2fr .8fr" }, gap: 1.5, mb: 1.5 }}>
@@ -56,7 +60,7 @@ export default async function AdminPage() {
         </Box>
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3,1fr)" }, gap: 1.5 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2,1fr)", xl: "repeat(4,1fr)" }, gap: 1.5 }}>
         {adminCards.map((item) => {
           const Icon = item.icon;
 

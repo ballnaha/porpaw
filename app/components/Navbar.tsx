@@ -36,16 +36,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       }}
     >
       {/* Brand */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box component={Link} href="/" aria-label="ไปหน้าแรก" sx={{ display: "flex", alignItems: "center", gap: 1.5, textDecoration: "none" }}>
         <Image
-          src="/images/logo_new1.png"
-          alt="ZoomieDash"
+          src="/images/logo_new6.png"
+          alt="baebite"
           width={1191}
           height={346}
           priority
           style={{
             width: "auto",
-            height: "clamp(30px, 6vw, 42px)",
+            height: "clamp(30px, 6vw, 35px)",
             objectFit: "contain",
           }}
         />

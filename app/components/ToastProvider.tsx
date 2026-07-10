@@ -9,6 +9,9 @@ import { DS } from "./DesignSystem";
 interface ToastOptions {
   title?: string;
   message: string;
+  actionHref?: string;
+  actionLabel?: string;
+  hideAction?: boolean;
 }
 
 interface ToastContextValue {
@@ -64,9 +67,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <Typography noWrap sx={{ color: DS.gray, fontSize: 11.5, mt: .25 }}>
             {toast?.message}
           </Typography>
-          <Button component={Link} href="/cart" startIcon={<ShoppingCart size={13} />} onClick={() => setToast(null)} sx={{ minWidth: 0, color: "#B96449", fontSize: 11.5, fontWeight: 800, p: 0, mt: .45 }}>
-            ดูตะกร้า
-          </Button>
+          {!toast?.hideAction && (
+            <Button component={Link} href={toast?.actionHref ?? "/cart"} startIcon={<ShoppingCart size={13} />} onClick={() => setToast(null)} sx={{ minWidth: 0, color: "#B96449", fontSize: 11.5, fontWeight: 800, p: 0, mt: .45 }}>
+              {toast?.actionLabel ?? "ดูตะกร้า"}
+            </Button>
+          )}
         </Box>
         <IconButton size="small" aria-label="ปิดการแจ้งเตือน" onClick={() => setToast(null)} sx={{ alignSelf: "start", color: DS.gray, p: .5 }}>
           <X size={15} />

@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 function createMariaDbAdapter() {
-  const databaseUrl = process.env.DATABASE_URL ?? "mysql://root:@localhost:3306/zoomiedash";
+  const databaseUrl = process.env.DATABASE_URL ?? "mysql://root:@localhost:3306/baebite";
 
   const url = new URL(databaseUrl);
 
