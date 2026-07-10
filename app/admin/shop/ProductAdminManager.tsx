@@ -125,6 +125,10 @@ function parseWeightKg(value: string) {
   const number = Number(normalized.replace(/[^\d.]/g, ""));
   if (!Number.isFinite(number) || number <= 0) return "";
 
+  if (normalized.includes("kg") || normalized.includes("กิโลกรัม")) {
+    return String(number);
+  }
+
   if (normalized.includes("กรัม") || normalized.includes("gram") || normalized.includes("g")) {
     return String(Math.round(number) / 1000);
   }
@@ -244,14 +248,12 @@ export function ProductAdminManager() {
 
   const validateForm = () => {
     const nextErrors: FormErrors = {};
-    const parsedBenefits = parseBenefits(form.benefits);
     const price = Number(form.price);
     const oldPrice = Number(form.oldPrice);
     const rating = Number(form.rating);
     const weight = Number(form.weight);
 
     if (!form.name.trim()) nextErrors.name = "กรอกชื่อสินค้า";
-    else if (form.name.trim().length < 2) nextErrors.name = "ชื่อสินค้าสั้นเกินไป";
 
     if (!form.slug.trim()) nextErrors.slug = "กรอก slug";
     else if (products.some((item) => item.slug === preview.slug && (mode === "new" || item.slug !== editingSlug))) nextErrors.slug = "slug นี้ถูกใช้แล้ว";
@@ -264,11 +266,9 @@ export function ProductAdminManager() {
     if (!Number.isFinite(rating) || rating < 0 || rating > 5) nextErrors.rating = "Rating ต้องอยู่ระหว่าง 0-5";
     if (!isValidHexColor(form.color)) nextErrors.color = "ใช้รูปแบบสี เช่น #FFF0E8";
     if (!form.detail.trim()) nextErrors.detail = "กรอกคำอธิบายสั้น";
-    else if (form.detail.trim().length < 10) nextErrors.detail = "คำอธิบายสั้นควรมีอย่างน้อย 10 ตัวอักษร";
     if (!form.description.trim()) nextErrors.description = "กรอกรายละเอียดสินค้า";
-    else if (form.description.trim().length < 20) nextErrors.description = "รายละเอียดควรมีอย่างน้อย 20 ตัวอักษร";
     if (!form.image.trim()) nextErrors.images = "เลือกภาพหน้าปกสินค้า";
-    if (parsedBenefits.length < 2) nextErrors.benefits = "เพิ่มจุดเด่นอย่างน้อย 2 ข้อ";
+    if (!form.benefits.trim()) nextErrors.benefits = "กรอกจุดเด่นสินค้า";
     if (!form.ingredients.trim()) nextErrors.ingredients = "กรอกส่วนประกอบสำคัญ";
 
     return nextErrors;
@@ -594,171 +594,222 @@ export function ProductAdminManager() {
     );
   }
 
+  const sectionCard = { bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "22px", overflow: "hidden" } as const;
+  const sectionHeader = (icon: React.ReactNode, title: string, subtitle: string) => (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: { xs: 1.6, md: 2.2 }, pt: { xs: 1.5, md: 1.8 }, pb: 1.2 }}>
+      <Box sx={{ width: 36, height: 36, display: "grid", placeItems: "center", bgcolor: "#FFF7F1", color: "#B96449", border: "1px solid #F6E4D8", borderRadius: "11px", flexShrink: 0 }}>{icon}</Box>
+      <Box>
+        <Typography sx={{ fontSize: 15, fontWeight: 900, lineHeight: 1.2 }}>{title}</Typography>
+        <Typography sx={{ color: DS.gray, fontSize: 12, mt: .1 }}>{subtitle}</Typography>
+      </Box>
+    </Box>
+  );
+  const sectionBody = { px: { xs: 1.6, md: 2.2 }, pb: { xs: 1.6, md: 2 } } as const;
+
   return (
     <Box sx={{ display: "grid", gap: 1.6 }}>
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(3,1fr)" }, gap: 1.2 }}>
-        {[
-          { label: "Products", value: products.length, detail: "รายการทั้งหมด" },
-          { label: "Categories", value: categoryCount, detail: "หมวดหมู่ที่เปิดใช้" },
-          { label: "Custom", value: customCount, detail: "เพิ่มจากหลังบ้าน" },
-        ].map((item) => (
-          <Box key={item.label} sx={{ bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "18px", p: 1.7 }}>
-            <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>{item.label}</Typography>
-            <Typography sx={{ fontSize: 29, fontWeight: 900, lineHeight: 1.1, mt: .3 }}>{item.value}</Typography>
-            <Typography sx={{ color: DS.gray, fontSize: 12.5, mt: .3 }}>{item.detail}</Typography>
+      {/* ── Top bar ── */}
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
+          <Button onClick={backToList} startIcon={<ArrowLeft size={15} />} sx={{ color: DS.gray, border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, px: 1.4, py: .65, fontSize: 12.5, fontWeight: 900, textTransform: "none" }}>
+            Back
+          </Button>
+          <Box>
+            <Typography sx={{ fontSize: 20, fontWeight: 900, lineHeight: 1.15 }}>{mode === "edit" ? "Edit product" : "New product"}</Typography>
+            <Typography sx={{ color: DS.gray, fontSize: 12.5 }}>กรอกข้อมูลสินค้าเพื่อแสดงบนหน้าร้าน</Typography>
           </Box>
-        ))}
+        </Box>
+        <Button disabled={isSaving} onClick={saveProduct} startIcon={mode === "edit" ? <Check size={16} /> : <Plus size={16} />} sx={{ bgcolor: DS.ink, color: DS.white, borderRadius: DS.radius.pill, px: 2.4, py: 1.05, fontWeight: 900, textTransform: "none", "&:hover": { bgcolor: "#44444D" }, "&.Mui-disabled": { bgcolor: "#D8D2CC", color: DS.white } }}>
+          {isSaving ? "กำลังบันทึก..." : mode === "edit" ? "บันทึกสินค้า" : "เพิ่มสินค้า"}
+        </Button>
       </Box>
 
+      {message && (
+        <Box sx={{ bgcolor: message.startsWith("เพิ่ม") || message.startsWith("อัปโหลด") || message.startsWith("เลือกไว้") ? "#EEF7F0" : "#FFF8E7", color: message.startsWith("เพิ่ม") || message.startsWith("อัปโหลด") || message.startsWith("เลือกไว้") ? "#4D7D5B" : "#8A6320", border: `1px solid ${message.startsWith("เพิ่ม") || message.startsWith("อัปโหลด") || message.startsWith("เลือกไว้") ? "#CFE5D4" : "#F6DCA6"}`, borderRadius: "14px", px: 1.35, py: 1, fontSize: 12.8, fontWeight: 800 }}>
+          {message}
+        </Box>
+      )}
+
+      {/* ── Main 2-column layout ── */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "minmax(0,1.16fr) 430px" }, gap: 1.6, alignItems: "start" }}>
         <Box sx={{ display: "grid", gap: 1.4 }}>
-          <Box sx={{ bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "22px", p: { xs: 1.6, md: 2.2 } }}>
-            <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5, flexWrap: "wrap" }}>
-              <Box>
-                <Button onClick={backToList} startIcon={<ArrowLeft size={15} />} sx={{ color: DS.gray, border: `1px solid ${DS.line}`, borderRadius: DS.radius.pill, px: 1.4, py: .65, mb: 1.1, fontSize: 12.5, fontWeight: 900, textTransform: "none" }}>
-                  Back to products
-                </Button>
-                <Typography sx={{ fontSize: 20, fontWeight: 900 }}>{mode === "edit" ? "Edit product" : "New product"}</Typography>
-                <Typography sx={{ color: DS.gray, fontSize: 13.2, mt: .35 }}>ข้อมูลหลักที่ใช้ในหน้าร้านและหน้ารายละเอียดสินค้า</Typography>
-              </Box>
-            </Box>
 
-            {message && (
-              <Box sx={{ mt: 1.4, bgcolor: message.startsWith("เพิ่ม") || message.startsWith("อัปโหลด") ? "#EEF7F0" : "#FFF8E7", color: message.startsWith("เพิ่ม") || message.startsWith("อัปโหลด") ? "#4D7D5B" : "#8A6320", border: `1px solid ${message.startsWith("เพิ่ม") || message.startsWith("อัปโหลด") ? "#CFE5D4" : "#F6DCA6"}`, borderRadius: "14px", px: 1.35, py: 1, fontSize: 12.8, fontWeight: 800 }}>
-                {message}
-              </Box>
-            )}
-
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.2, mt: 1.7 }}>
+          {/* ── Section: General info ── */}
+          <Box sx={sectionCard}>
+            {sectionHeader(<Pencil size={17} />, "ข้อมูลทั่วไป", "ชื่อ, หมวดหมู่ และ slug สำหรับ URL")}
+            <Box sx={{ ...sectionBody, display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.2 }}>
               <TextField label="ชื่อสินค้า" value={form.name} onChange={(event) => update("name", event.target.value)} size="small" required error={Boolean(errors.name)} helperText={errors.name} sx={fieldSx} />
-              <TextField label="Slug" value={form.slug} onChange={(event) => update("slug", slugify(event.target.value))} size="small" required error={Boolean(errors.slug)} helperText={errors.slug} sx={fieldSx} />
+              <TextField label="Slug (URL)" value={form.slug} onChange={(event) => update("slug", slugify(event.target.value))} size="small" required error={Boolean(errors.slug)} helperText={errors.slug || `porpaw.com/shop/${form.slug || "..."}`} sx={fieldSx} />
               <TextField select label="หมวดหมู่" value={form.category} onChange={(event) => update("category", event.target.value)} size="small" sx={fieldSx} slotProps={{ select: { MenuProps: selectMenuProps } }}>
                 {categories.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
               </TextField>
-              <Box sx={{ display: "grid", gridTemplateColumns: "40px minmax(0,1fr) 40px", gap: .65, alignItems: "center" }}>
-                <Button onClick={() => stepNumber("weight", -.1, 2)} aria-label="ลดน้ำหนักสินค้า" sx={{ minWidth: 40, width: 40, height: 40, color: DS.ink, border: `1px solid ${DS.line}`, borderRadius: "12px", p: 0 }}><Minus size={15} /></Button>
-                <TextField label="น้ำหนักสินค้า" value={form.weight} onChange={(event) => update("weight", normalizeDecimal(event.target.value))} size="small" required error={Boolean(errors.weight)} helperText={errors.weight} sx={fieldSx} slotProps={{ input: { endAdornment: <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>kg</Typography> } }} />
-                <Button onClick={() => stepNumber("weight", .1, 2)} aria-label="เพิ่มน้ำหนักสินค้า" sx={{ minWidth: 40, width: 40, height: 40, color: DS.white, bgcolor: DS.ink, borderRadius: "12px", p: 0, "&:hover": { bgcolor: "#44444D" } }}><Plus size={15} /></Button>
-              </Box>
-              <Box sx={{ display: "grid", gridTemplateColumns: "40px minmax(0,1fr) 40px", gap: .65, alignItems: "center" }}>
-                <Button onClick={() => stepNumber("price", -10)} aria-label="ลดราคา" sx={{ minWidth: 40, width: 40, height: 40, color: DS.ink, border: `1px solid ${DS.line}`, borderRadius: "12px", p: 0 }}><Minus size={15} /></Button>
-                <TextField label="ราคา" value={form.price} onChange={(event) => update("price", event.target.value.replace(/\D/g, ""))} size="small" required error={Boolean(errors.price)} helperText={errors.price} sx={fieldSx} slotProps={{ input: { endAdornment: <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>฿</Typography> } }} />
-                <Button onClick={() => stepNumber("price", 10)} aria-label="เพิ่มราคา" sx={{ minWidth: 40, width: 40, height: 40, color: DS.white, bgcolor: DS.ink, borderRadius: "12px", p: 0, "&:hover": { bgcolor: "#44444D" } }}><Plus size={15} /></Button>
-              </Box>
-              <Box sx={{ display: "grid", gridTemplateColumns: "40px minmax(0,1fr) 40px", gap: .65, alignItems: "center" }}>
-                <Button onClick={() => stepNumber("oldPrice", -10)} aria-label="ลดราคาเดิม" sx={{ minWidth: 40, width: 40, height: 40, color: DS.ink, border: `1px solid ${DS.line}`, borderRadius: "12px", p: 0 }}><Minus size={15} /></Button>
-                <TextField label="ราคาเดิม" value={form.oldPrice} onChange={(event) => update("oldPrice", event.target.value.replace(/\D/g, ""))} size="small" error={Boolean(errors.oldPrice)} helperText={errors.oldPrice} sx={fieldSx} slotProps={{ input: { endAdornment: <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>฿</Typography> } }} />
-                <Button onClick={() => stepNumber("oldPrice", 10)} aria-label="เพิ่มราคาเดิม" sx={{ minWidth: 40, width: 40, height: 40, color: DS.white, bgcolor: DS.ink, borderRadius: "12px", p: 0, "&:hover": { bgcolor: "#44444D" } }}><Plus size={15} /></Button>
-              </Box>
               <TextField select label="Badge" value={form.badge} onChange={(event) => update("badge", event.target.value)} size="small" sx={fieldSx} slotProps={{ select: { MenuProps: selectMenuProps } }}>
                 {badges.map((item) => <MenuItem key={item || "none"} value={item}>{item || "ไม่มี badge"}</MenuItem>)}
               </TextField>
-              <TextField label="Rating" value={form.rating} onChange={(event) => update("rating", normalizeDecimal(event.target.value))} size="small" error={Boolean(errors.rating)} helperText={errors.rating} sx={fieldSx} />
-              <TextField label="สีพื้นหลังสินค้า" value={form.color} onChange={(event) => update("color", event.target.value)} size="small" error={Boolean(errors.color)} helperText={errors.color} sx={fieldSx} />
-              <TextField label="คำอธิบายสั้น" value={form.detail} onChange={(event) => update("detail", event.target.value)} size="small" required multiline minRows={2} error={Boolean(errors.detail)} helperText={errors.detail} sx={{ ...fieldSx, gridColumn: { md: "1 / -1" } }} />
-              <TextField label="รายละเอียดสินค้า" value={form.description} onChange={(event) => update("description", event.target.value)} size="small" required multiline minRows={4} error={Boolean(errors.description)} helperText={errors.description} sx={{ ...fieldSx, gridColumn: { md: "1 / -1" } }} />
             </Box>
           </Box>
 
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: ".95fr 1.05fr" }, gap: 1.4 }}>
-            <Box sx={{ bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "22px", p: { xs: 1.6, md: 2 } }}>
-              <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.2, flexWrap: "wrap" }}>
-                <Box>
-                  <Typography sx={{ display: "flex", alignItems: "center", gap: .7, fontSize: 17, fontWeight: 900 }}><ImagePlus size={18} />Media gallery</Typography>
-                  <Typography sx={{ color: DS.gray, fontSize: 12.8, mt: .35 }}>อัปโหลดหลายรูป แล้วเลือกภาพหน้าปกจาก gallery ได้</Typography>
-                </Box>
-                <Button component="label" startIcon={<UploadCloud size={16} />} sx={{ bgcolor: DS.ink, color: DS.white, borderRadius: DS.radius.pill, px: 1.8, py: .9, fontWeight: 900, fontSize: 12.5, textTransform: "none", "&:hover": { bgcolor: "#44444D" } }}>
-                  Select images
-                  <Box component="input" hidden type="file" accept="image/*" multiple onChange={selectImages} />
-                </Button>
+          {/* ── Section: Pricing & weight ── */}
+          <Box sx={sectionCard}>
+            {sectionHeader(<Typography sx={{ fontSize: 17, fontWeight: 900, lineHeight: 1 }}>฿</Typography>, "ราคาและน้ำหนัก", "ตั้งราคาขาย ราคาเดิม และน้ำหนักสินค้า")}
+            <Box sx={{ ...sectionBody, display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.2 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 36px", gap: .5, alignItems: "center" }}>
+                <Button onClick={() => stepNumber("price", -10)} aria-label="ลดราคา" sx={{ minWidth: 36, width: 36, height: 36, color: DS.ink, border: `1px solid ${DS.line}`, borderRadius: "10px", p: 0 }}><Minus size={14} /></Button>
+                <TextField label="ราคาขาย" value={form.price} onChange={(event) => update("price", event.target.value.replace(/\D/g, ""))} size="small" required error={Boolean(errors.price)} helperText={errors.price} sx={fieldSx} slotProps={{ input: { endAdornment: <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>฿</Typography> } }} />
+                <Button onClick={() => stepNumber("price", 10)} aria-label="เพิ่มราคา" sx={{ minWidth: 36, width: 36, height: 36, color: DS.white, bgcolor: DS.ink, borderRadius: "10px", p: 0, "&:hover": { bgcolor: "#44444D" } }}><Plus size={14} /></Button>
               </Box>
-              {errors.images && (
-                <Box sx={{ mt: 1.2, bgcolor: "#FFF4F2", border: "1px solid #F2C9C2", color: "#9A3F35", borderRadius: "13px", px: 1.2, py: .85, fontSize: 12.5, fontWeight: 900 }}>
-                  {errors.images}
+              <Box sx={{ display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 36px", gap: .5, alignItems: "center" }}>
+                <Button onClick={() => stepNumber("oldPrice", -10)} aria-label="ลดราคาเดิม" sx={{ minWidth: 36, width: 36, height: 36, color: DS.ink, border: `1px solid ${DS.line}`, borderRadius: "10px", p: 0 }}><Minus size={14} /></Button>
+                <TextField label="ราคาเดิม (ถ้ามี)" placeholder="ว่าง = ไม่แสดง" value={form.oldPrice} onChange={(event) => update("oldPrice", event.target.value.replace(/\D/g, ""))} size="small" error={Boolean(errors.oldPrice)} helperText={errors.oldPrice} sx={fieldSx} slotProps={{ input: { endAdornment: <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>฿</Typography> } }} />
+                <Button onClick={() => stepNumber("oldPrice", 10)} aria-label="เพิ่มราคาเดิม" sx={{ minWidth: 36, width: 36, height: 36, color: DS.white, bgcolor: DS.ink, borderRadius: "10px", p: 0, "&:hover": { bgcolor: "#44444D" } }}><Plus size={14} /></Button>
+              </Box>
+              <Box sx={{ display: "grid", gridTemplateColumns: "36px minmax(0,1fr) 36px", gap: .5, alignItems: "center", gridColumn: { md: "1 / -1" } }}>
+                <Button onClick={() => stepNumber("weight", -.1, 2)} aria-label="ลดน้ำหนัก" sx={{ minWidth: 36, width: 36, height: 36, color: DS.ink, border: `1px solid ${DS.line}`, borderRadius: "10px", p: 0 }}><Minus size={14} /></Button>
+                <TextField label="น้ำหนัก" value={form.weight} onChange={(event) => update("weight", normalizeDecimal(event.target.value))} size="small" required error={Boolean(errors.weight)} helperText={errors.weight} sx={fieldSx} slotProps={{ input: { endAdornment: <Typography sx={{ color: DS.gray, fontSize: 12, fontWeight: 900 }}>kg</Typography> } }} />
+                <Button onClick={() => stepNumber("weight", .1, 2)} aria-label="เพิ่มน้ำหนัก" sx={{ minWidth: 36, width: 36, height: 36, color: DS.white, bgcolor: DS.ink, borderRadius: "10px", p: 0, "&:hover": { bgcolor: "#44444D" } }}><Plus size={14} /></Button>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* ── Section: Appearance ── */}
+          <Box sx={sectionCard}>
+            {sectionHeader(<Star size={17} />, "การแสดงผล", "สีพื้นหลังการ์ดสินค้าและคะแนน")}
+            <Box sx={{ ...sectionBody, display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.2, alignItems: "start" }}>
+              <Box>
+                <TextField label="สีพื้นหลังสินค้า" value={form.color} onChange={(event) => update("color", event.target.value)} size="small" error={Boolean(errors.color)} helperText={errors.color} fullWidth sx={fieldSx} />
+                <Box sx={{ display: "flex", gap: .6, mt: 1, flexWrap: "wrap" }}>
+                  {["#FFF0E8", "#EEF4FF", "#FFF5E3", "#F4EEFF", "#EEFAF2", "#FFF0F1", "#EEF7F5", "#FAF1E8"].map((c) => (
+                    <Box key={c} onClick={() => update("color", c)} sx={{ width: 28, height: 28, bgcolor: c, border: `2px solid ${form.color === c ? DS.ink : DS.line}`, borderRadius: "8px", cursor: "pointer", transition: "border-color .15s", "&:hover": { borderColor: DS.peach } }} />
+                  ))}
                 </Box>
-              )}
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: .9, mt: 1.4 }}>
+              </Box>
+              <TextField label="Rating (0-5)" value={form.rating} onChange={(event) => update("rating", normalizeDecimal(event.target.value))} size="small" error={Boolean(errors.rating)} helperText={errors.rating} sx={fieldSx} />
+            </Box>
+          </Box>
+
+          {/* ── Section: Description ── */}
+          <Box sx={sectionCard}>
+            {sectionHeader(<Sparkles size={17} />, "คำอธิบายสินค้า", "ข้อความที่แสดงบนหน้ารวมสินค้าและหน้ารายละเอียด")}
+            <Box sx={{ ...sectionBody, display: "grid", gap: 1.2 }}>
+              <TextField label="คำอธิบายสั้น" placeholder="แสดงบนการ์ดสินค้าในหน้ารวม" value={form.detail} onChange={(event) => update("detail", event.target.value)} size="small" required multiline minRows={2} error={Boolean(errors.detail)} helperText={errors.detail} sx={fieldSx} />
+              <TextField label="รายละเอียดสินค้า" placeholder="แสดงเต็มในหน้ารายละเอียดสินค้า" value={form.description} onChange={(event) => update("description", event.target.value)} size="small" required multiline minRows={4} error={Boolean(errors.description)} helperText={errors.description} sx={fieldSx} />
+            </Box>
+          </Box>
+
+          {/* ── Section: Media gallery ── */}
+          <Box sx={sectionCard}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1.2, flexWrap: "wrap", px: { xs: 1.6, md: 2.2 }, pt: { xs: 1.5, md: 1.8 }, pb: 1.2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ width: 36, height: 36, display: "grid", placeItems: "center", bgcolor: "#FFF7F1", color: "#B96449", border: "1px solid #F6E4D8", borderRadius: "11px", flexShrink: 0 }}><ImagePlus size={17} /></Box>
+                <Box>
+                  <Typography sx={{ fontSize: 15, fontWeight: 900, lineHeight: 1.2 }}>Media gallery</Typography>
+                  <Typography sx={{ color: DS.gray, fontSize: 12, mt: .1 }}>อัปโหลดหลายรูปแล้วเลือกภาพหน้าปก</Typography>
+                </Box>
+              </Box>
+              <Button component="label" startIcon={<UploadCloud size={15} />} sx={{ bgcolor: DS.ink, color: DS.white, borderRadius: DS.radius.pill, px: 1.6, py: .75, fontWeight: 900, fontSize: 12, textTransform: "none", "&:hover": { bgcolor: "#44444D" } }}>
+                Select images
+                <Box component="input" hidden type="file" accept="image/*" multiple onChange={selectImages} />
+              </Button>
+            </Box>
+            {errors.images && (
+              <Box sx={{ mx: { xs: 1.6, md: 2.2 }, mb: 1, bgcolor: "#FFF4F2", border: "1px solid #F2C9C2", color: "#9A3F35", borderRadius: "13px", px: 1.2, py: .85, fontSize: 12.5, fontWeight: 900 }}>
+                {errors.images}
+              </Box>
+            )}
+            <Box sx={{ ...sectionBody, pt: 0 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(100px,1fr))", gap: .9 }}>
                 {gallery.length === 0 && (
-                  <Box sx={{ gridColumn: "1 / -1", minHeight: 156, display: "grid", placeItems: "center", bgcolor: "#F8F7F5", border: `1px dashed ${DS.line}`, borderRadius: "16px", p: 2, textAlign: "center" }}>
+                  <Box sx={{ gridColumn: "1 / -1", minHeight: 140, display: "grid", placeItems: "center", bgcolor: "#F8F7F5", border: `1px dashed ${DS.line}`, borderRadius: "16px", p: 2, textAlign: "center" }}>
                     <Box>
-                      <Box sx={{ width: 46, height: 46, display: "grid", placeItems: "center", mx: "auto", bgcolor: DS.white, color: "#B96449", border: `1px solid ${DS.line}`, borderRadius: "16px", mb: 1 }}>
-                        <UploadCloud size={21} />
+                      <Box sx={{ width: 44, height: 44, display: "grid", placeItems: "center", mx: "auto", bgcolor: DS.white, color: "#B96449", border: `1px solid ${DS.line}`, borderRadius: "14px", mb: .8 }}>
+                        <UploadCloud size={20} />
                       </Box>
-                      <Typography sx={{ fontSize: 14, fontWeight: 900 }}>ยังไม่มีรูปสินค้า</Typography>
-                      <Typography sx={{ color: DS.gray, fontSize: 12.5, mt: .3 }}>กด Select images เพื่อเลือกหลายรูปก่อนบันทึก</Typography>
+                      <Typography sx={{ fontSize: 13.5, fontWeight: 900 }}>ยังไม่มีรูปสินค้า</Typography>
+                      <Typography sx={{ color: DS.gray, fontSize: 12, mt: .2 }}>กด Select images เพื่อเลือกรูปก่อนบันทึก</Typography>
                     </Box>
                   </Box>
                 )}
                 {gallery.map((image, index) => (
                   <Box key={image} sx={{ position: "relative", minWidth: 0 }}>
-                    <Box sx={{ position: "relative", height: 92, bgcolor: image === form.image ? form.color : "#F8F7F5", border: `1.5px solid ${image === form.image ? DS.peach : DS.line}`, borderRadius: "14px", overflow: "hidden" }}>
+                    <Box sx={{ position: "relative", height: 88, bgcolor: image === form.image ? form.color : "#F8F7F5", border: `1.5px solid ${image === form.image ? DS.peach : DS.line}`, borderRadius: "14px", overflow: "hidden" }}>
                       <ProductImage src={image} alt={`รูปสินค้า ${index + 1}`} sizes="130px" padding={9} />
-                      {image === form.image && <Box sx={{ position: "absolute", top: 7, left: 7, width: 23, height: 23, display: "grid", placeItems: "center", bgcolor: DS.ink, color: DS.white, borderRadius: "50%" }}><Check size={13} /></Box>}
+                      {image === form.image && <Box sx={{ position: "absolute", top: 6, left: 6, width: 22, height: 22, display: "grid", placeItems: "center", bgcolor: DS.ink, color: DS.white, borderRadius: "50%" }}><Check size={12} /></Box>}
                     </Box>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 32px", gap: .5, mt: .6 }}>
-                      <Button onClick={() => setCoverImage(image)} disabled={image === form.image} sx={{ minWidth: 0, color: image === form.image ? "#568768" : DS.ink, bgcolor: image === form.image ? "#EEF7F0" : "#F8F7F5", border: `1px solid ${image === form.image ? "#CFE5D4" : DS.line}`, borderRadius: "11px", py: .45, fontSize: 11, fontWeight: 900, textTransform: "none" }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 30px", gap: .4, mt: .5 }}>
+                      <Button onClick={() => setCoverImage(image)} disabled={image === form.image} sx={{ minWidth: 0, color: image === form.image ? "#568768" : DS.ink, bgcolor: image === form.image ? "#EEF7F0" : "#F8F7F5", border: `1px solid ${image === form.image ? "#CFE5D4" : DS.line}`, borderRadius: "10px", py: .4, fontSize: 10.5, fontWeight: 900, textTransform: "none" }}>
                         {image === form.image ? "Cover" : "Set cover"}
                       </Button>
-                      <Button onClick={() => removeImage(image)} disabled={gallery.length <= 1} aria-label="ลบรูป" sx={{ minWidth: 32, width: 32, height: 32, color: DS.gray, border: `1px solid ${DS.line}`, borderRadius: "11px", p: 0 }}>
-                        <Trash2 size={14} />
+                      <Button onClick={() => removeImage(image)} disabled={gallery.length <= 1} aria-label="ลบรูป" sx={{ minWidth: 30, width: 30, height: 30, color: DS.gray, border: `1px solid ${DS.line}`, borderRadius: "10px", p: 0 }}>
+                        <Trash2 size={13} />
                       </Button>
                     </Box>
                   </Box>
                 ))}
               </Box>
             </Box>
+          </Box>
 
-            <Box sx={{ bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "22px", p: { xs: 1.6, md: 2 } }}>
-              <Typography sx={{ fontSize: 17, fontWeight: 900 }}>Product content</Typography>
-              <Typography sx={{ color: DS.gray, fontSize: 12.8, mt: .35 }}>ข้อความส่วนล่างของหน้ารายละเอียดสินค้า</Typography>
-              <Box sx={{ display: "grid", gap: 1.15, mt: 1.35 }}>
-                <TextField label="จุดเด่นสินค้า (1 บรรทัดต่อ 1 ข้อ)" value={form.benefits} onChange={(event) => update("benefits", event.target.value)} size="small" multiline minRows={4} error={Boolean(errors.benefits)} helperText={errors.benefits} sx={fieldSx} />
-                <TextField label="ส่วนประกอบสำคัญ" value={form.ingredients} onChange={(event) => update("ingredients", event.target.value)} size="small" multiline minRows={4} error={Boolean(errors.ingredients)} helperText={errors.ingredients} sx={fieldSx} />
+          {/* ── Section: Product content ── */}
+          <Box sx={sectionCard}>
+            {sectionHeader(<Check size={17} />, "จุดเด่นและส่วนประกอบ", "ข้อมูลเชิงลึกที่แสดงในหน้ารายละเอียดสินค้า")}
+            <Box sx={{ ...sectionBody, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 1.2 }}>
+              <Box>
+                <TextField label="จุดเด่นสินค้า" placeholder={"1 บรรทัดต่อ 1 ข้อ\nเช่น\nโปรตีนคุณภาพสูง\nโอเมก้า 3 และ 6"} value={form.benefits} onChange={(event) => update("benefits", event.target.value)} size="small" multiline minRows={5} error={Boolean(errors.benefits)} helperText={errors.benefits} fullWidth sx={fieldSx} />
+                {benefits.length > 0 && (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: .5, mt: .8 }}>
+                    {benefits.map((b, i) => (
+                      <Chip key={i} label={b} size="small" sx={{ bgcolor: "#EEF7F0", color: "#4D7D5B", border: "1px solid #CFE5D4", fontWeight: 700, fontSize: 11.5 }} />
+                    ))}
+                  </Box>
+                )}
               </Box>
+              <TextField label="ส่วนประกอบสำคัญ" placeholder="ระบุส่วนประกอบหลักของสินค้า" value={form.ingredients} onChange={(event) => update("ingredients", event.target.value)} size="small" multiline minRows={5} error={Boolean(errors.ingredients)} helperText={errors.ingredients} sx={fieldSx} />
             </Box>
           </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          {/* ── Bottom save button (mobile) ── */}
+          <Box sx={{ display: { xs: "flex", xl: "none" }, justifyContent: "flex-end" }}>
             <Button disabled={isSaving} onClick={saveProduct} startIcon={mode === "edit" ? <Check size={16} /> : <Plus size={16} />} sx={{ bgcolor: DS.ink, color: DS.white, borderRadius: DS.radius.pill, px: 2.4, py: 1.05, fontWeight: 900, textTransform: "none", "&:hover": { bgcolor: "#44444D" }, "&.Mui-disabled": { bgcolor: "#D8D2CC", color: DS.white } }}>
               {isSaving ? "กำลังบันทึก..." : mode === "edit" ? "บันทึกสินค้า" : "เพิ่มสินค้า"}
             </Button>
           </Box>
         </Box>
 
+        {/* ── Sticky preview sidebar ── */}
         <Box sx={{ position: { xl: "sticky" }, top: 24, display: "grid", gap: 1.4 }}>
           <Box sx={{ bgcolor: DS.white, border: `1px solid ${DS.line}`, borderRadius: "24px", p: 1.35, boxShadow: "0 14px 34px rgba(43,43,51,.06)" }}>
-            <Box sx={{ position: "relative", height: { xs: 300, xl: 360 }, bgcolor: preview.color, borderRadius: "18px", overflow: "hidden" }}>
+            <Box sx={{ position: "relative", height: { xs: 280, xl: 340 }, bgcolor: preview.color, borderRadius: "18px", overflow: "hidden" }}>
               {preview.badge && <Chip label={preview.badge} size="small" sx={{ position: "absolute", zIndex: 2, top: 12, left: 12, bgcolor: PRODUCT_BADGE_COLORS[preview.badge]?.background ?? DS.white, color: PRODUCT_BADGE_COLORS[preview.badge]?.color ?? DS.ink, border: `1px solid ${PRODUCT_BADGE_COLORS[preview.badge]?.border ?? DS.line}`, fontWeight: 800 }} />}
               <ProductImage src={preview.image} alt={preview.name} sizes="430px" padding={32} eager />
             </Box>
             {gallery.length > 0 && (
-              <Box sx={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(gallery.length, 4)},1fr)`, gap: .75, mt: .85 }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(gallery.length, 4)},1fr)`, gap: .65, mt: .75 }}>
                 {gallery.slice(0, 4).map((image) => (
-                  <Box key={image} sx={{ position: "relative", height: 66, bgcolor: image === preview.image ? preview.color : "#F8F7F5", border: `1px solid ${image === preview.image ? DS.peach : DS.line}`, borderRadius: "12px", overflow: "hidden" }}>
-                    <ProductImage src={image} alt="" sizes="90px" padding={8} />
+                  <Box key={image} sx={{ position: "relative", height: 60, bgcolor: image === preview.image ? preview.color : "#F8F7F5", border: `1px solid ${image === preview.image ? DS.peach : DS.line}`, borderRadius: "11px", overflow: "hidden" }}>
+                    <ProductImage src={image} alt="" sizes="90px" padding={7} />
                   </Box>
                 ))}
               </Box>
             )}
-            <Box sx={{ p: "14px 6px 4px" }}>
+            <Box sx={{ p: "12px 6px 4px" }}>
               <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-                <Typography sx={{ color: "#B96449", fontSize: 12.5, fontWeight: 900 }}>{preview.category}</Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: .35 }}><Star size={13} fill="#F6C85F" color="#F6C85F" /><Typography sx={{ color: DS.gray, fontSize: 12 }}>{preview.rating}</Typography></Box>
+                <Typography sx={{ color: "#B96449", fontSize: 12, fontWeight: 900 }}>{preview.category}</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: .35 }}><Star size={12} fill="#F6C85F" color="#F6C85F" /><Typography sx={{ color: DS.gray, fontSize: 11.5 }}>{preview.rating}</Typography></Box>
               </Box>
-              <Typography sx={{ fontSize: 22, fontWeight: 900, mt: .55 }}>{preview.name}</Typography>
-              <Typography sx={{ color: DS.gray, fontSize: 13, lineHeight: 1.55, mt: .35 }}>{preview.detail}</Typography>
-              <Typography sx={{ color: DS.gray, fontSize: 12, mt: .8 }}>{preview.weight}</Typography>
-              <Box sx={{ display: "flex", alignItems: "baseline", gap: .8 }}>
-                <Typography sx={{ fontSize: 27, fontWeight: 900, mt: .55 }}>฿{preview.price.toLocaleString()}</Typography>
-                {preview.oldPrice && <Typography sx={{ color: DS.gray, fontSize: 13, textDecoration: "line-through" }}>฿{preview.oldPrice.toLocaleString()}</Typography>}
+              <Typography sx={{ fontSize: 20, fontWeight: 900, mt: .4, lineHeight: 1.2 }}>{preview.name}</Typography>
+              <Typography sx={{ color: DS.gray, fontSize: 12.5, lineHeight: 1.5, mt: .3 }}>{preview.detail}</Typography>
+              <Typography sx={{ color: DS.gray, fontSize: 11.5, mt: .6 }}>{preview.weight}</Typography>
+              <Box sx={{ display: "flex", alignItems: "baseline", gap: .7 }}>
+                <Typography sx={{ fontSize: 25, fontWeight: 900, mt: .4 }}>฿{preview.price.toLocaleString()}</Typography>
+                {preview.oldPrice && <Typography sx={{ color: DS.gray, fontSize: 12.5, textDecoration: "line-through" }}>฿{preview.oldPrice.toLocaleString()}</Typography>}
               </Box>
             </Box>
           </Box>
 
-          <Box sx={{ bgcolor: "#FFF7F1", border: "1px solid #F6E4D8", borderRadius: "20px", p: 1.6 }}>
-            <Typography sx={{ display: "flex", alignItems: "center", gap: .7, fontSize: 14.5, fontWeight: 900 }}><Sparkles size={16} />ข้อมูลที่หน้าร้านใช้</Typography>
-            <Typography sx={{ color: DS.gray, fontSize: 12.7, lineHeight: 1.65, mt: .7 }}>
-              เลือกหลายรูปเพื่อ preview ก่อน ระบบจะอัปโหลดจริงเมื่อกดบันทึกสินค้า
+          <Box sx={{ bgcolor: "#FFF7F1", border: "1px solid #F6E4D8", borderRadius: "18px", p: 1.4 }}>
+            <Typography sx={{ display: "flex", alignItems: "center", gap: .6, fontSize: 13.5, fontWeight: 900 }}><Eye size={15} />Live preview</Typography>
+            <Typography sx={{ color: DS.gray, fontSize: 12, lineHeight: 1.6, mt: .5 }}>
+              ตัวอย่างที่แสดงจะเปลี่ยนแบบ real-time ตามข้อมูลที่กรอก รูปจะอัปโหลดจริงเมื่อกดบันทึก
             </Typography>
           </Box>
         </Box>
@@ -767,3 +818,4 @@ export function ProductAdminManager() {
     </Box>
   );
 }
+

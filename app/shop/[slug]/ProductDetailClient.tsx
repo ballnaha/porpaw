@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Box, Button, Chip, Container, IconButton, ThemeProvider, Typography } from "@mui/material";
@@ -31,6 +31,12 @@ export default function ProductDetailClient({ product: initialProduct, slug, pac
   const [activeImage, setActiveImage] = useState(0);
   const { addItem, items } = useCart();
   const openLine = () => { window.location.href = "https://line.me/R/ti/p/@baebite"; };
+
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.name} | baebite`;
+    }
+  }, [product?.name]);
 
   if (!product && !clientShopHydrated) {
     return <ThemeProvider theme={theme}>

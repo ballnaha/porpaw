@@ -15,17 +15,19 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getShopProductBySlugForPage(slug);
+  const decodedSlug = decodeURIComponent(slug);
+  const product = await getShopProductBySlugForPage(decodedSlug);
   if (!product) {
+    const nameFromSlug = decodedSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     return {
-      title: "สินค้า baebite",
-      description: "รายละเอียดสินค้า baebite",
+      title: `${nameFromSlug} | baebite`,
+      description: `รายละเอียดสินค้า ${nameFromSlug} - baebite`,
       metadataBase,
       robots: { index: false, follow: true },
     };
   }
 
-  const title = `${product.name} ${product.weight} | baebite`;
+  const title = `${product.name} | baebite`;
   const imageUrl = product.image.startsWith("http") ? product.image : `${siteUrl}${product.image}`;
 
   return {
@@ -50,8 +52,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductDetailPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ packageId?: string }> }) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const decodedSlug = decodeURIComponent(slug);
   const requestedPackageId = Number(query.packageId);
-  const product = await getShopProductBySlugForPage(slug);
+  const product = await getShopProductBySlugForPage(decodedSlug);
 
   const structuredData = {
     "@context": "https://schema.org",
@@ -67,6 +70,6 @@ export default async function ProductDetailPage({ params, searchParams }: { para
 
   return <>
     {product && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />}
-    <ProductDetailClient product={product ?? null} slug={slug} packageId={Number.isFinite(requestedPackageId) ? requestedPackageId : undefined} />
+    <ProductDetailClient product={product ?? null} slug={decodedSlug} packageId={Number.isFinite(requestedPackageId) ? requestedPackageId : undefined} />
   </>;
 }
