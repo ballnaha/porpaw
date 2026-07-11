@@ -110,6 +110,7 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
                   py: 1.35,
                   minWidth: 148,
                   fontSize: 14,
+                  fontWeight: 400,
                   "&:hover": { bgcolor: "#EE876F" },
                 }}
               >
@@ -128,6 +129,7 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
                   py: 1.35,
                   minWidth: 180,
                   fontSize: 14,
+                  fontWeight: 800,
                   "&:hover": { borderColor: DS.ink, bgcolor: DS.white },
                 }}
               >
@@ -144,7 +146,7 @@ export const Hero: React.FC<HeroProps> = ({ handleLineLogin, isConnecting }) => 
             }}
           >
             <Image
-              src="/images/banner11.webp"
+              src="/images/banner12.webp"
               alt="สุนัข แมว และกล่องอาหารสัตว์คุณภาพ"
               width={800}
               height={600}

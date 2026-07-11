@@ -6,7 +6,7 @@
 .readable button,
 .readable a,
 .readable input {
-  font-family: var(--font-nunito), var(--font-kanit), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-nunito), var(--font-prompt), system-ui, -apple-system, sans-serif;
 }
 
 .readable small {

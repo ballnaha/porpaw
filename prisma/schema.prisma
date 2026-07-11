@@ -103,30 +103,49 @@ model FormulaGoal {
   updatedAt DateTime @updatedAt
 }
 
-model ShopProduct {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  name          String
-  category      String
-  detail        String   @db.Text
-  description   String   @db.Text
-  weightKg      Decimal  @db.Decimal(8, 3)
-  weightLabel   String
-  price         Int
-  oldPrice      Int?
-  image         String
-  galleryImages Json?
-  color         String   @default("#FFF0E8")
-  badge         String?
-  rating        Decimal  @default(4.80) @db.Decimal(3, 2)
-  benefits      Json
-  ingredients   String   @db.Text
-  sortOrder     Int      @default(0)
-  isActive      Boolean  @default(true)
+model ShopCategory {
+  id        String        @id @default(cuid())
+  slug      String        @unique
+  name      String        @unique
+  icon      String?
+  sortOrder Int           @default(0)
+  isActive  Boolean       @default(true)
+
+  products  ShopProduct[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([isActive, sortOrder])
-  @@index([category])
+}
+
+model ShopProduct {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  categoryId  String?
+  category    ShopCategory? @relation(fields: [categoryId], references: [id])
+  categoryTag String        @default("")
+  detail      String        @db.Text
+  description String        @db.Text
+  weightKg    Decimal       @db.Decimal(8, 3)
+  weightLabel String
+  price       Int
+  oldPrice    Int?
+  image       String
+  galleryImages Json?
+  color       String        @default("#FFF0E8")
+  badge       String?
+  rating      Decimal       @default(4.80) @db.Decimal(3, 2)
+  benefits    Json
+  ingredients String        @db.Text
+  sortOrder   Int           @default(0)
+  isActive    Boolean       @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([categoryId])
+  @@index([categoryTag])
 }

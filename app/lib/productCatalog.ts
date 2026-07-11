@@ -1,4 +1,4 @@
-export type ProductCategory = "อาหารสุนัข" | "อาหารแมว" | "ขนม" | "อาหารเสริม" | "ของเล่น" | "อุปกรณ์ดูแล" | "ที่นอน & บ้าน";
+export type ProductCategory = string;
 
 export interface ShopProduct {
   id: number;

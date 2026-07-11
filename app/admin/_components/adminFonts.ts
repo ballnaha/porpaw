@@ -1,4 +1,4 @@
-export const adminFontFamily = "var(--font-prompt), var(--font-kanit), system-ui, -apple-system, sans-serif";
+export const adminFontFamily = "var(--font-nunito), var(--font-prompt), system-ui, -apple-system, sans-serif";
 
 export const adminFontSx = {
   fontFamily: adminFontFamily,

@@ -38,8 +38,8 @@ export const DS = {
   cardShadowHover: "0 18px 40px rgba(43,43,51,0.14)",
   softShadow: "0 12px 40px rgba(43,43,51,0.10)",
 
-  // Font stack — Nunito first (matches reference), Kanit fallback for Thai
-  font: "var(--font-nunito), var(--font-kanit), system-ui, -apple-system, sans-serif",
+  // Font stack — Nunito first, Prompt fallback for Thai
+  font: "var(--font-nunito), var(--font-prompt), system-ui, -apple-system, sans-serif",
 } as const;
 
 export const theme = createTheme({

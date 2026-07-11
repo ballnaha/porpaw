@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-kanit), system-ui, -apple-system, sans-serif;
-  --font-title: var(--font-kanit), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-nunito), var(--font-prompt), system-ui, -apple-system, sans-serif;
+  --font-title: var(--font-nunito), var(--font-prompt), system-ui, -apple-system, sans-serif;
   
   --color-cream-light: #FFFFFF;     /* Ultra soft corgi cream */
   --color-cream-dark: #F5ECE1;      /* Pastel beige sand */
@@ -32,7 +32,7 @@ html {
 body {
   background-color: #FFFFFF;
   color: #1E293B;
-  font-family: var(--font-kanit), system-ui, sans-serif;
+  font-family: var(--font-nunito), var(--font-prompt), system-ui, sans-serif;
   overflow-x: hidden;
   font-size: 15.5px;
   line-height: 1.6;
@@ -44,13 +44,13 @@ img {
   user-select: none;
 }
 
-/* Explicit font helpers to guarantee Kanit font rendering */
+/* Explicit font helpers to guarantee font stack rendering */
 .font-sans {
-  font-family: var(--font-kanit), system-ui, sans-serif !important;
+  font-family: var(--font-nunito), var(--font-prompt), system-ui, sans-serif !important;
 }
 
 .font-title {
-  font-family: var(--font-kanit), system-ui, sans-serif !important;
+  font-family: var(--font-nunito), var(--font-prompt), system-ui, sans-serif !important;
 }
 
 /* Modern Professional SaaS Cards and Buttons (Pastel Corgi Palette) */

@@ -14,9 +14,9 @@ import { useCart } from "../components/CartProvider";
 import { MobileBottomNav } from "../components/MobileBottomNav";
 import { useClientShopProducts } from "../lib/clientProductStorage";
 import { PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../lib/productCatalog";
+import { useShopCategories } from "../lib/clientCategoryStorage";
 
 type Category = "ทั้งหมด" | ProductCategory;
-const CATEGORIES: Category[] = ["ทั้งหมด", "อาหารสุนัข", "อาหารแมว", "ขนม", "อาหารเสริม", "ของเล่น", "อุปกรณ์ดูแล", "ที่นอน & บ้าน"];
 
 const lineUrl = "https://line.me/R/ti/p/@baebite";
 
@@ -32,8 +32,10 @@ function ShopContent() {
   const searchParams = useSearchParams();
   const { addItem, items, recentlyAddedId } = useCart();
   const allProducts = useClientShopProducts();
+  const { categories: dbCategories, loading: catLoading } = useShopCategories();
+  const categoryNames: Category[] = ["ทั้งหมด", ...dbCategories.map((c) => c.name as Category)];
   const requestedCategory = searchParams.get("category");
-  const category: Category = CATEGORIES.includes(requestedCategory as Category)
+  const category: Category = categoryNames.includes(requestedCategory as Category)
     ? requestedCategory as Category
     : "ทั้งหมด";
   const products = allProducts.filter((product) => category === "ทั้งหมด" || product.category === category);
@@ -96,7 +98,13 @@ function ShopContent() {
           </Box>}
           <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, justifyContent: "space-between", alignItems: { xs: "flex-start", md: "flex-end" }, gap: 2, mb: 3 }}>
             <Box><Typography sx={{ color: "#B96449", fontSize: 13, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>Our products</Typography><Typography sx={{ fontSize: { xs: 30, md: 37 }, fontWeight: 700, letterSpacing: "-.02em", mt: .5 }}>เลือกสิ่งที่ดีที่สุดให้น้อง</Typography><Typography sx={{ color: DS.gray, fontSize: 15, mt: .5 }}>{products.length} รายการ · ราคา Mockup</Typography></Box>
-            <Box sx={{ display: "flex", flexWrap: { xs: "nowrap", md: "wrap" }, width: { xs: "calc(100vw - 24px)", md: "auto" }, overflowX: { xs: "auto", md: "visible" }, gap: .75, pb: { xs: .5, md: 0 }, scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}>{CATEGORIES.map((item) => <Button key={item} onClick={() => selectCategory(item)} aria-pressed={category === item} sx={{ flexShrink: 0, bgcolor: category === item ? DS.ink : DS.white, color: category === item ? DS.white : DS.ink, border: `1px solid ${category === item ? DS.ink : DS.line}`, borderRadius: DS.radius.pill, px: { xs: 1.5, md: 1.9 }, py: .8, fontSize: { xs: 12.5, md: 13.5 }, fontWeight: 600, "&:hover": { bgcolor: category === item ? "#44444D" : DS.peachSoft } }}>{item}</Button>)}</Box>
+            <Box sx={{ display: "flex", flexWrap: { xs: "nowrap", md: "wrap" }, width: { xs: "calc(100vw - 24px)", md: "auto" }, overflowX: { xs: "auto", md: "visible" }, gap: .75, pb: { xs: .5, md: 0 }, scrollbarWidth: "none", "&::-webkit-scrollbar": { display: "none" } }}>
+              {catLoading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                  <Box key={i} sx={{ flexShrink: 0, width: 80, height: 36, bgcolor: DS.line, borderRadius: DS.radius.pill, opacity: 0.5 }} />
+                ))
+                : categoryNames.map((item) => <Button key={item} onClick={() => selectCategory(item)} aria-pressed={category === item} sx={{ flexShrink: 0, bgcolor: category === item ? DS.ink : DS.white, color: category === item ? DS.white : DS.ink, border: `1px solid ${category === item ? DS.ink : DS.line}`, borderRadius: DS.radius.pill, px: { xs: 1.5, md: 1.9 }, py: .8, fontSize: { xs: 12.5, md: 13.5 }, fontWeight: 600, "&:hover": { bgcolor: category === item ? "#44444D" : DS.peachSoft } }}>{item}</Button>)}
+            </Box>
           </Box>
 
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2,minmax(0,1fr))", lg: "repeat(4,1fr)" }, gap: { xs: 1, sm: 1.5, md: 2 } }}>

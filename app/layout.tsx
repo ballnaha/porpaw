@@ -20,7 +20,7 @@ const nunito = Nunito({
 });
 
 const prompt = Prompt({
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   subsets: ["latin", "thai"],
   variable: "--font-prompt",
   display: "swap",

@@ -5,7 +5,8 @@ type DbShopProductRow = {
   id: string;
   slug: string;
   name: string;
-  category: string;
+  categoryId: string | null;
+  categoryTag: string;
   detail: string;
   description: string;
   weightKg: unknown;
@@ -58,7 +59,7 @@ export function mapDbShopProduct(row: DbShopProductRow): ShopProduct {
     id: dbProductId(row.id),
     slug: row.slug,
     name: row.name,
-    category: row.category as ProductCategory,
+    category: (row.categoryTag || row.categoryId || "อื่น ๆ") as ProductCategory,
     detail: row.detail,
     description: row.description,
     weight: row.weightLabel || `${toNumber(row.weightKg, 0).toLocaleString()} kg`,
@@ -77,10 +78,12 @@ export function mapDbShopProduct(row: DbShopProductRow): ShopProduct {
 export async function getDbShopProducts() {
   try {
     const rows = await prisma.$queryRaw<DbShopProductRow[]>`
-      SELECT id, slug, name, category, detail, description, weightKg, weightLabel, price, oldPrice, image, galleryImages, color, badge, rating, benefits, ingredients, sortOrder, isActive
-      FROM ShopProduct
-      WHERE isActive = true
-      ORDER BY sortOrder ASC, createdAt DESC
+      SELECT p.id, p.slug, p.name, p.categoryId, p.categoryTag, p.detail, p.description,
+             p.weightKg, p.weightLabel, p.price, p.oldPrice, p.image, p.galleryImages,
+             p.color, p.badge, p.rating, p.benefits, p.ingredients, p.sortOrder, p.isActive
+      FROM ShopProduct p
+      WHERE p.isActive = true
+      ORDER BY p.sortOrder ASC, p.createdAt DESC
     `;
 
     return rows.map(mapDbShopProduct);
@@ -92,9 +95,11 @@ export async function getDbShopProducts() {
 export async function getDbShopProductBySlug(slug: string) {
   try {
     const rows = await prisma.$queryRaw<DbShopProductRow[]>`
-      SELECT id, slug, name, category, detail, description, weightKg, weightLabel, price, oldPrice, image, galleryImages, color, badge, rating, benefits, ingredients, sortOrder, isActive
-      FROM ShopProduct
-      WHERE slug = ${slug} AND isActive = true
+      SELECT p.id, p.slug, p.name, p.categoryId, p.categoryTag, p.detail, p.description,
+             p.weightKg, p.weightLabel, p.price, p.oldPrice, p.image, p.galleryImages,
+             p.color, p.badge, p.rating, p.benefits, p.ingredients, p.sortOrder, p.isActive
+      FROM ShopProduct p
+      WHERE p.slug = ${slug} AND p.isActive = true
       LIMIT 1
     `;
 

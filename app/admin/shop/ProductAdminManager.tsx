@@ -5,13 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField, Typography } from "@mui/material";
 import { ArrowLeft, Check, Eye, ImagePlus, Minus, Pencil, Plus, Sparkles, Star, Trash2, UploadCloud } from "lucide-react";
+import { AdminPagination } from "../_components/AdminPagination";
 import { DS } from "../../components/DesignSystem";
 import { useToast } from "../../components/ToastProvider";
 import { saveClientShopData, useClientShopData } from "../../lib/clientProductStorage";
 import { PRODUCTS, PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../../lib/productCatalog";
 import { adminFontFamily } from "../_components/adminFonts";
+import { useShopCategories } from "../../lib/clientCategoryStorage";
 
-const categories: ProductCategory[] = ["อาหารสุนัข", "อาหารแมว", "ขนม", "อาหารเสริม", "ของเล่น", "อุปกรณ์ดูแล", "ที่นอน & บ้าน"];
 const badges = ["", "ขายดี", "แนะนำ", "ใหม่", "คุ้มค่า"];
 
 const fieldSx = {
@@ -212,6 +213,7 @@ function ProductImage({ src, alt, sizes, padding = 14, eager = false }: { src: s
 export function ProductAdminManager() {
   const { showToast } = useToast();
   const { products, deletedSlugs } = useClientShopData();
+  const { categories: dbCategories } = useShopCategories();
   const [mode, setMode] = useState<ManagerMode>("list");
   const [editingSlug, setEditingSlug] = useState("");
   const [form, setForm] = useState<FormState>(initialForm);
@@ -222,9 +224,13 @@ export function ProductAdminManager() {
   const [deleteTarget, setDeleteTarget] = useState<ShopProduct | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
   const nextId = useMemo(() => Math.max(...products.map((item) => item.id), 0) + 1, [products]);
   const customCount = products.filter((product) => !PRODUCTS.some((catalogProduct) => catalogProduct.slug === product.slug)).length;
   const categoryCount = new Set(products.map((product) => product.category)).size;
+  const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const pagedProducts = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const benefits = parseBenefits(form.benefits);
   const gallery = uniqueImages([form.image, ...form.galleryImages]);
   const preview: ShopProduct = {
@@ -444,6 +450,7 @@ export function ProductAdminManager() {
     setSlugEdited(false);
     setEditingSlug("");
     setMode("list");
+    setPage(1);
     setIsSaving(false);
     setMessage(mode === "edit" ? `บันทึก ${productToSave.name} แล้ว` : `เพิ่ม ${productToSave.name} ในรายการหลังบ้านแล้ว`);
     showToast({
@@ -478,6 +485,7 @@ export function ProductAdminManager() {
     setMessage(`ลบ ${target.name} ออกจากรายการแล้ว`);
     setDeleteTarget(null);
     setIsDeleting(false);
+    setPage((p) => Math.min(p, Math.max(1, Math.ceil(nextProducts.length / PAGE_SIZE))));
     showToast({ title: "ลบสินค้าแล้ว", message: `${target.name}${imagesToDelete.length ? ` · ลบรูป ${imagesToDelete.length} ไฟล์` : ""}`, hideAction: true });
   };
 
@@ -518,7 +526,7 @@ export function ProductAdminManager() {
           <Box sx={{ display: { xs: "none", md: "grid" }, gridTemplateColumns: "minmax(0,1.1fr) 150px 130px 110px 236px", gap: 1, bgcolor: "#F8F7F5", borderTop: message ? `1px solid ${DS.line}` : 0, borderBottom: `1px solid ${DS.line}`, px: 2.1, py: 1.15, mt: message ? 1.3 : 0 }}>
             {["สินค้า", "หมวดหมู่", "ราคา", "สถานะ", "จัดการ"].map((item) => <Typography key={item} sx={{ color: DS.gray, fontSize: 12, fontWeight: 900, letterSpacing: ".06em" }}>{item}</Typography>)}
           </Box>
-          {products.map((product, index) => (
+          {pagedProducts.map((product, index) => (
             <Box key={product.slug} sx={{ display: "grid", gridTemplateColumns: { xs: "64px minmax(0,1fr)", md: "minmax(0,1.1fr) 150px 130px 110px 236px" }, gap: { xs: 1, md: 1 }, alignItems: "center", borderBottom: `1px solid ${DS.line}`, px: 2.1, py: 1.35, "&:last-child": { borderBottom: 0 } }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.15, minWidth: 0 }}>
                 <Box sx={{ position: "relative", width: 52, height: 52, bgcolor: product.color, borderRadius: "14px", overflow: "hidden", flexShrink: 0 }}>
@@ -547,6 +555,13 @@ export function ProductAdminManager() {
               </Box>
             </Box>
           ))}
+          <AdminPagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={products.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
         </Box>
 
         <Dialog
@@ -639,9 +654,9 @@ export function ProductAdminManager() {
             {sectionHeader(<Pencil size={17} />, "ข้อมูลทั่วไป", "ชื่อ, หมวดหมู่ และ slug สำหรับ URL")}
             <Box sx={{ ...sectionBody, display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.2 }}>
               <TextField label="ชื่อสินค้า" value={form.name} onChange={(event) => update("name", event.target.value)} size="small" required error={Boolean(errors.name)} helperText={errors.name} sx={fieldSx} />
-              <TextField label="Slug (URL)" value={form.slug} onChange={(event) => update("slug", slugify(event.target.value))} size="small" required error={Boolean(errors.slug)} helperText={errors.slug || `porpaw.com/shop/${form.slug || "..."}`} sx={fieldSx} />
+              <TextField label="Slug (URL)" value={form.slug} onChange={(event) => update("slug", slugify(event.target.value))} size="small" required error={Boolean(errors.slug)} helperText={errors.slug || `baebite.com/shop/${form.slug || "..."}`} sx={fieldSx} />
               <TextField select label="หมวดหมู่" value={form.category} onChange={(event) => update("category", event.target.value)} size="small" sx={fieldSx} slotProps={{ select: { MenuProps: selectMenuProps } }}>
-                {categories.map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
+                {dbCategories.map((cat) => <MenuItem key={cat.id} value={cat.name}>{cat.icon ? `${cat.icon} ` : ""}{cat.name}</MenuItem>)}
               </TextField>
               <TextField select label="Badge" value={form.badge} onChange={(event) => update("badge", event.target.value)} size="small" sx={fieldSx} slotProps={{ select: { MenuProps: selectMenuProps } }}>
                 {badges.map((item) => <MenuItem key={item || "none"} value={item}>{item || "ไม่มี badge"}</MenuItem>)}

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AdminChrome } from "../_components/AdminChrome";
-import { ProductAdminManager } from "./ProductAdminManager";
+import { ShopAdminTabs } from "./ShopAdminTabs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,7 +18,7 @@ export default async function AdminShopPage() {
       userName={session.user.name ?? "baebite Admin"}
       active="shop"
     >
-      <ProductAdminManager />
+      <ShopAdminTabs />
     </AdminChrome>
   );
 }

@@ -97,5 +97,23 @@ for (const formula of formulas) {
   });
 }
 
+const shopCategories = [
+  { slug: "food-dog", name: "อาหารสุนัข", icon: "🐕", sortOrder: 1 },
+  { slug: "food-cat", name: "อาหารแมว", icon: "🐈", sortOrder: 2 },
+  { slug: "snack", name: "ขนม", icon: "🦴", sortOrder: 3 },
+  { slug: "supplement", name: "อาหารเสริม", icon: "💊", sortOrder: 4 },
+  { slug: "toy", name: "ของเล่น", icon: "🎾", sortOrder: 5 },
+  { slug: "grooming", name: "อุปกรณ์ดูแล", icon: "✂️", sortOrder: 6 },
+  { slug: "bed-home", name: "ที่นอน & บ้าน", icon: "🏠", sortOrder: 7 },
+];
+
+for (const cat of shopCategories) {
+  await prisma.shopCategory.upsert({
+    where: { slug: cat.slug },
+    update: { name: cat.name, icon: cat.icon, sortOrder: cat.sortOrder },
+    create: cat,
+  });
+}
+
 await prisma.$disconnect();
-console.log(`Seeded admin user, package tiers, and formula goals: ${email}`);
+console.log(`Seeded admin user, package tiers, formula goals, and shop categories: ${email}`);
