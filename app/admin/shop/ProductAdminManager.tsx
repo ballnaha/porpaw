@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField, Typography } from "@mui/material";
@@ -8,8 +8,7 @@ import { ArrowLeft, Check, Eye, ImagePlus, Minus, Pencil, Plus, Sparkles, Star, 
 import { AdminPagination } from "../_components/AdminPagination";
 import { DS } from "../../components/DesignSystem";
 import { useToast } from "../../components/ToastProvider";
-import { saveClientShopData, useClientShopData } from "../../lib/clientProductStorage";
-import { PRODUCTS, PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../../lib/productCatalog";
+import { PRODUCT_BADGE_COLORS, type ProductCategory, type ShopProduct } from "../../lib/productCatalog";
 import { adminFontFamily } from "../_components/adminFonts";
 import { useShopCategories } from "../../lib/clientCategoryStorage";
 
@@ -212,7 +211,8 @@ function ProductImage({ src, alt, sizes, padding = 14, eager = false }: { src: s
 
 export function ProductAdminManager() {
   const { showToast } = useToast();
-  const { products, deletedSlugs } = useClientShopData();
+  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [productLoading, setProductLoading] = useState(true);
   const { categories: dbCategories } = useShopCategories();
   const [mode, setMode] = useState<ManagerMode>("list");
   const [editingSlug, setEditingSlug] = useState("");
@@ -227,12 +227,32 @@ export function ProductAdminManager() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
   const nextId = useMemo(() => Math.max(...products.map((item) => item.id), 0) + 1, [products]);
-  const customCount = products.filter((product) => !PRODUCTS.some((catalogProduct) => catalogProduct.slug === product.slug)).length;
+  const customCount = products.length;
   const categoryCount = new Set(products.map((product) => product.category)).size;
   const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
   const pagedProducts = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const benefits = parseBenefits(form.benefits);
   const gallery = uniqueImages([form.image, ...form.galleryImages]);
+  useEffect(() => {
+    let cancelled = false;
+
+    queueMicrotask(async () => {
+      setProductLoading(true);
+      try {
+        const response = await fetch("/api/admin/shop/products", { cache: "no-store" });
+        const result = await response.json() as { products?: ShopProduct[]; error?: string };
+
+        if (!response.ok) throw new Error(result.error ?? "Load products failed");
+        if (!cancelled) setProducts(result.products ?? []);
+      } catch {
+        if (!cancelled) setMessage("โหลดข้อมูลสินค้าจากฐานข้อมูลไม่สำเร็จ");
+      } finally {
+        if (!cancelled) setProductLoading(false);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, []);
   const preview: ShopProduct = {
     id: nextId,
     slug: form.slug || slugify(form.name) || "new-product",
@@ -439,11 +459,25 @@ export function ProductAdminManager() {
       return;
     }
 
-    const nextProducts = mode === "edit"
-      ? products.map((product) => product.slug === editingSlug ? { ...productToSave, id: product.id } : product)
-      : [productToSave, ...products];
-    const nextDeletedSlugs = deletedSlugs.filter((slug) => slug !== productToSave.slug);
-    saveClientShopData(nextProducts, nextDeletedSlugs);
+    try {
+      const response = await fetch(mode === "edit" ? `/api/admin/shop/products/${encodeURIComponent(editingSlug)}` : "/api/admin/shop/products", {
+        method: mode === "edit" ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productToSave),
+      });
+      const result = await response.json() as { product?: ShopProduct; error?: string };
+
+      if (!response.ok || !result.product) throw new Error(result.error ?? "Save product failed");
+      const savedProduct = result.product;
+      setProducts((current) => mode === "edit"
+        ? current.map((product) => product.slug === editingSlug ? savedProduct : product)
+        : [savedProduct, ...current]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "บันทึกสินค้าไม่สำเร็จ");
+      setIsSaving(false);
+      return;
+    }
+
     clearPendingImages();
     setPendingImages([]);
     setForm(initialForm);
@@ -466,8 +500,16 @@ export function ProductAdminManager() {
     setIsDeleting(true);
     const target = deleteTarget;
     const imagesToDelete = unreferencedUploadedImages(target, products);
-    const nextProducts = products.filter((item) => item.slug !== target.slug);
-    const nextDeletedSlugs = uniqueImages([...deletedSlugs, target.slug]);
+
+    try {
+      const response = await fetch(`/api/admin/shop/products/${encodeURIComponent(target.slug)}`, { method: "DELETE" });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error ?? "Delete product failed");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "ลบสินค้าไม่สำเร็จ");
+      setIsDeleting(false);
+      return;
+    }
 
     if (imagesToDelete.length) {
       try {
@@ -481,8 +523,9 @@ export function ProductAdminManager() {
       }
     }
 
-    saveClientShopData(nextProducts, nextDeletedSlugs);
-    setMessage(`ลบ ${target.name} ออกจากรายการแล้ว`);
+    const nextProducts = products.filter((item) => item.slug !== target.slug);
+    setProducts(nextProducts);
+    setMessage(`ลบ ${target.name} ออกจากฐานข้อมูลแล้ว`);
     setDeleteTarget(null);
     setIsDeleting(false);
     setPage((p) => Math.min(p, Math.max(1, Math.ceil(nextProducts.length / PAGE_SIZE))));
@@ -517,6 +560,11 @@ export function ProductAdminManager() {
             </Button>
           </Box>
 
+          {productLoading && (
+            <Box sx={{ mx: { xs: 1.6, md: 2.1 }, mt: 1.3, bgcolor: "#F8F7F5", color: DS.gray, border: `1px solid ${DS.line}`, borderRadius: "14px", px: 1.35, py: 1, fontSize: 12.8, fontWeight: 800 }}>
+              Loading products from database...
+            </Box>
+          )}
           {message && (
             <Box sx={{ mx: { xs: 1.6, md: 2.1 }, mt: 1.3, bgcolor: message.startsWith("ลบ") ? "#FFF8E7" : "#EEF7F0", color: message.startsWith("ลบ") ? "#8A6320" : "#4D7D5B", border: `1px solid ${message.startsWith("ลบ") ? "#F6DCA6" : "#CFE5D4"}`, borderRadius: "14px", px: 1.35, py: 1, fontSize: 12.8, fontWeight: 800 }}>
               {message}

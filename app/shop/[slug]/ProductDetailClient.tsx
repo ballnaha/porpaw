@@ -33,10 +33,10 @@ export default function ProductDetailClient({ product: initialProduct, slug, pac
   const openLine = () => { window.location.href = "https://line.me/R/ti/p/@baebite"; };
 
   useEffect(() => {
-    if (product) {
+    if (product?.name) {
       document.title = `${product.name} | baebite`;
     }
-  }, [product?.name]);
+  }, [product]);
 
   if (!product && !clientShopHydrated) {
     return <ThemeProvider theme={theme}>

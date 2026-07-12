@@ -11,9 +11,10 @@ import {
   InputBase,
   Button,
 } from "@mui/material";
-import { PawPrint, ChevronDown, Minus, Plus } from "lucide-react";
+import { PawPrint, ChevronDown, Minus, Plus, TrendingDown, TrendingUp, ShieldCheck, Scale } from "lucide-react";
 import { DS } from "./DesignSystem";
 import type { SubscriptionPlanName } from "../lib/subscriptionPricing";
+import { assessWeight } from "../lib/subscriptionPricing";
 
 type Species = "dog" | "cat";
 
@@ -65,6 +66,8 @@ const getLifeStage = (species: Species, age: number | null) => {
 
   return { factor: SPECIES_FACTOR[species], label: "วัยโต" };
 };
+
+
 
 // Recommended nutrient split (% of daily intake). Fixed categorical order —
 // each nutrient keeps its own colour across species (colour follows the entity).
@@ -225,7 +228,7 @@ interface BrandRecommendation {
   buttonText: string;
 }
 
-const RECOMMENDED_BRANDS: Record<Species, Record<string, BrandRecommendation[]>> = {
+export const RECOMMENDED_BRANDS: Record<Species, Record<string, BrandRecommendation[]>> = {
   dog: {
     skin_coat: [
       {
@@ -397,6 +400,7 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
   const [activity, setActivity] = useState("normal");
   const [goal, setGoal] = useState("maintain");
   const [neutered, setNeutered] = useState("intact");
+  const [dogSize, setDogSize] = useState("medium");
 
   const result = useMemo(() => {
     const kg = parseFloat(weight);
@@ -408,7 +412,9 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
     const goalFactor = GOALS.find((g) => g.value === goal)?.factor ?? 1;
     const neutFactor = NEUTERED_FACTORS[species][neutered] ?? 1;
     const parsedAge = parseFloat(age);
-    const lifeStage = getLifeStage(species, Number.isFinite(parsedAge) ? parsedAge : null);
+    const normalizedAge = Number.isFinite(parsedAge) ? parsedAge : null;
+    const lifeStage = getLifeStage(species, normalizedAge);
+    const weightAssessment = assessWeight(species, kg, normalizedAge, dogSize);
 
     const kcal = Math.round(rer * lifeStage.factor * actFactor * goalFactor * neutFactor);
     const grams = Math.round((kcal / KCAL_PER_GRAM) / 5) * 5;
@@ -422,8 +428,8 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
             ? "Premium"
             : "Plus";
 
-    return { kcal, grams, monthlyGrams, lifeStage, recommendedPlan };
-  }, [weight, age, activity, goal, species, neutered]);
+    return { kcal, grams, monthlyGrams, lifeStage, recommendedPlan, weightAssessment };
+  }, [weight, age, activity, goal, species, neutered, dogSize]);
 
   const grams = result?.grams ?? null;
 
@@ -578,6 +584,9 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                 onClick={() => {
                   setSpecies(s);
                   setNeutered("intact");
+                  if (s === "dog") {
+                    setDogSize("medium");
+                  }
                 }}
                 role="button"
                 tabIndex={0}
@@ -585,6 +594,9 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                   if (e.key === "Enter") {
                     setSpecies(s);
                     setNeutered("intact");
+                    if (s === "dog") {
+                      setDogSize("medium");
+                    }
                   }
                 }}
                 sx={{
@@ -605,6 +617,61 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
               </Box>
             ))}
           </Box>
+
+          {/* Dog Size Toggle (Only when species === "dog") */}
+          {species === "dog" && (
+            <Box sx={{ mb: 1.5 }}>
+              <Typography component="label" sx={labelSx}>ขนาดสายพันธุ์</Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 0.5,
+                  p: 0.5,
+                  bgcolor: DS.peachSoft,
+                  borderRadius: "14px",
+                  height: 44,
+                  alignItems: "center",
+                }}
+              >
+                {[
+                  { value: "small", label: "พันธุ์เล็ก" },
+                  { value: "medium", label: "พันธุ์กลาง" },
+                  { value: "large", label: "พันธุ์ใหญ่" },
+                ].map((item) => {
+                  const active = dogSize === item.value;
+                  return (
+                    <Box
+                      key={item.value}
+                      onClick={() => setDogSize(item.value)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && setDogSize(item.value)}
+                      sx={{
+                        py: 0.6,
+                        textAlign: "center",
+                        borderRadius: "10px",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "all .2s",
+                        bgcolor: active ? DS.peach : "transparent",
+                        color: active ? DS.white : "#9a8a82",
+                        boxShadow: active ? "0 4px 10px rgba(245,153,127,.2)" : "none",
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        "&:focus-visible": { outline: `2px solid ${DS.peach}`, outlineOffset: 2 },
+                      }}
+                    >
+                      {item.label}
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
 
           {/* Weight + Age */}
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.25, mb: 1.25 }}>
@@ -737,16 +804,15 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
           {/* Top section: Calories on Left, Gauge on Right */}
           <Box
             sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: "center",
-              justifyContent: "space-between",
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "minmax(0,1fr) 150px" },
+              alignItems: "start",
               gap: 1.5,
-              mb: 1.75,
+              mb: 1.5,
             }}
           >
             {/* Daily Food Amount info */}
-            <Box sx={{ textAlign: { xs: "center", sm: "left" }, flex: 1 }}>
+            <Box sx={{ textAlign: { xs: "center", sm: "left" }, minWidth: 0 }}>
               <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: DS.gray, mb: 0.25 }}>
                 Daily Food Amount
               </Typography>
@@ -756,9 +822,11 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                   fontWeight: 800,
                   color: DS.ink,
                   lineHeight: 1.05,
-                  letterSpacing: "-0.02em",
-                }}
-              >
+                  letterSpacing: 0,
+                  fontVariantNumeric: "tabular-nums",
+                  overflowWrap: "anywhere",
+                  }}
+                >
                 {result ? `${result.grams.toLocaleString()}` : "0"}{" "}
                 <Box component="span" sx={{ fontSize: 15, fontWeight: 600, color: DS.gray }}>
                   g
@@ -774,62 +842,14 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
                   ({result.lifeStage.label})
                 </Typography>
               )}
-              {result && (
-                <Box
-                  sx={{
-                    mt: 1.25,
-                    p: 1.25,
-                    bgcolor: DS.peachSoft,
-                    borderRadius: "12px",
-                  }}
-                >
-                  <Typography sx={{ fontSize: 11, color: DS.gray, fontWeight: 600 }}>
-                    เกรดอาหารที่เหมาะกับผลคำนวณ
-                  </Typography>
-                  <Typography sx={{ fontSize: 18, color: DS.ink, fontWeight: 800, mt: 0.2 }}>
-                    {result.recommendedPlan}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10.5, color: DS.gray, mt: 0.2 }}>
-                    สูตรดูแลและจำนวนสินค้าในแพ็กเกจจะจัดในขั้นตอนถัดไป
-                  </Typography>
-                  <Typography sx={{ fontSize: 11.5, color: "#B96449", fontWeight: 700, mt: 0.75 }}>
-                    อ้างอิง {result.grams.toLocaleString()} กรัม / วัน
-                  </Typography>
-                </Box>
-              )}
-              {result && (
-                <Button
-                  component="a"
-                  href={`/configure?plan=${result.recommendedPlan}&species=${species}`}
-                  disableElevation
-                  sx={{
-                    mt: 1.5,
-                    width: "100%",
-                    bgcolor: DS.peach,
-                    color: DS.white,
-                    borderRadius: DS.radius.pill,
-                    py: 1,
-                    fontSize: 12.5,
-                    fontWeight: 600,
-                    textAlign: "center",
-                    textTransform: "none",
-                    boxShadow: "0 4px 10px rgba(245,153,127,0.15)",
-                    transition: "transform .2s, box-shadow .2s",
-                    "&:hover": {
-                      bgcolor: "#EE876F",
-                      transform: "translateY(-1.5px)",
-                      boxShadow: "0 6px 15px rgba(245,153,127,0.25)",
-                    },
-                  }}
-                >
-                  ดูเกรด {result.recommendedPlan} ที่แนะนำ
-                </Button>
-              )}
             </Box>
 
             {/* 5-Capsule Nutrient Tubes */}
             <Box
               sx={{
+                gridColumn: { sm: "2" },
+                gridRow: { sm: "1" },
+                justifySelf: "center",
                 width: 150,
                 height: 140,
                 display: "flex",
@@ -927,6 +947,105 @@ export const NutritionCalculator: React.FC<NutritionCalculatorProps> = ({
               </Box>
             </Box>
           </Box>
+
+          {/* Weight Assessment & Recommended Formula Banner */}
+          {result && (
+            <Box
+              sx={{
+                mb: 1.75,
+                p: 1.25,
+                bgcolor: result.weightAssessment.tone.soft,
+                border: `1px solid ${result.weightAssessment.tone.border}`,
+                borderRadius: "14px",
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "stretch", sm: "center" },
+                justifyContent: "space-between",
+                gap: 1.5,
+                textAlign: "left",
+              }}
+            >
+              {/* Left Side: Assessment details */}
+              <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25, minWidth: 0, flex: 1 }}>
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    display: "grid",
+                    placeItems: "center",
+                    bgcolor: DS.white,
+                    color: result.weightAssessment.tone.color,
+                    border: `1px solid ${result.weightAssessment.tone.border}`,
+                    borderRadius: "10px",
+                    flexShrink: 0,
+                    mt: 0.25,
+                  }}
+                >
+                  {result.weightAssessment.action === "lose" ? (
+                    <TrendingDown size={18} />
+                  ) : result.weightAssessment.action === "gain" ? (
+                    <TrendingUp size={18} />
+                  ) : (
+                    <ShieldCheck size={18} />
+                  )}
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography sx={{ color: result.weightAssessment.tone.color, fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>
+                    {result.weightAssessment.title}
+                  </Typography>
+                  <Typography sx={{ color: DS.ink, fontSize: 11.5, fontWeight: 700, mt: 0.5, lineHeight: 1.3 }}>
+                    {result.weightAssessment.targetLabel}
+                  </Typography>
+                  <Typography sx={{ color: DS.gray, fontSize: 10.5, fontWeight: 500, mt: 0.25, lineHeight: 1.3 }}>
+                    ช่วงมาตรฐาน: {result.weightAssessment.idealRange}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Right Side: Formula recommendation & button */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "row", sm: "column" },
+                  alignItems: { xs: "center", sm: "flex-end" },
+                  justifyContent: { xs: "space-between", sm: "center" },
+                  gap: 1.25,
+                  width: { xs: "100%", sm: "auto" },
+                  borderTop: { xs: `1px solid ${result.weightAssessment.tone.border}`, sm: "none" },
+                  pt: { xs: 1.25, sm: 0 },
+                  flexShrink: 0,
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                  <Scale size={14} color={DS.gray} />
+                  <Typography sx={{ color: DS.ink, fontSize: 12, fontWeight: 800 }}>
+                    สูตรแนะนำ: <Box component="span" sx={{ color: DS.peach, fontWeight: 900 }}>{result.recommendedPlan}</Box>
+                  </Typography>
+                </Box>
+                <Button
+                  component="a"
+                  href={`/configure?plan=${result.recommendedPlan}&species=${species}&weight=${weight}&age=${age}&activity=${activity}&goal=${goal}&neutered=${neutered}&dogSize=${dogSize}`}
+                  disableElevation
+                  size="small"
+                  sx={{
+                    minHeight: 30,
+                    px: 2,
+                    bgcolor: DS.peach,
+                    color: DS.white,
+                    borderRadius: DS.radius.pill,
+                    fontSize: 11.5,
+                    fontWeight: 800,
+                    textTransform: "none",
+                    whiteSpace: "nowrap",
+                    boxShadow: "none",
+                    "&:hover": { bgcolor: "#EE876F", boxShadow: "none" },
+                  }}
+                >
+                  ดูสูตร
+                </Button>
+              </Box>
+            </Box>
+          )}
 
           {/* Divider and Nutrient Ratio */}
           <Box sx={{ borderTop: "1px solid rgba(43,43,51,.08)", pt: 1.5, mb: 1.5 }}>

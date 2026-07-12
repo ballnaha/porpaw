@@ -268,3 +268,95 @@ export function calculateDailyFoodGrams({
 }) {
   return calculateNutritionPlan({ species, weightKg, ageYears, activity, bodyGoal, neutered }).dailyGrams;
 }
+
+export interface WeightAssessment {
+  status: "under" | "ideal" | "over";
+  action: "gain" | "maintain" | "lose";
+  title: string;
+  summary: string;
+  idealRange: string;
+  targetLabel: string;
+  tone: {
+    color: string;
+    soft: string;
+    border: string;
+  };
+}
+
+export function getReferenceWeightRange(species: PetSpecies, age: number | null, dogSize?: string) {
+  if (species === "cat") {
+    if (!age || age <= 0) return { min: 3, max: 6, label: "แมวโตทั่วไป 3-6 กก." };
+    if (age < 0.5) return { min: 1, max: 3, label: "ลูกแมวอายุต่ำกว่า 6 เดือน 1-3 กก." };
+    if (age < 1) return { min: 2.5, max: 5, label: "ลูกแมว 6-12 เดือน 2.5-5 กก." };
+    if (age >= 10) return { min: 3, max: 5.5, label: "แมวสูงวัย 3-5.5 กก." };
+    return { min: 3, max: 6, label: "แมวโตทั่วไป 3-6 กก." };
+  }
+  
+  // species === "dog"
+  const size = dogSize || "medium";
+  
+  if (size === "small") {
+    if (!age || age <= 0) return { min: 2, max: 10, label: "สุนัขพันธุ์เล็กโตเต็มวัย 2-10 กก." };
+    if (age < 0.5) return { min: 1, max: 4, label: "ลูกสุนัขพันธุ์เล็ก < 6 เดือน 1-4 กก." };
+    if (age < 1) return { min: 1.5, max: 8, label: "ลูกสุนัขพันธุ์เล็ก 6-12 เดือน 1.5-8 กก." };
+    if (age >= 7) return { min: 1.8, max: 9, label: "สุนัขพันธุ์เล็กสูงวัย 1.8-9 กก." };
+    return { min: 2, max: 10, label: "สุนัขพันธุ์เล็กโตเต็มวัย 2-10 กก." };
+  }
+  
+  if (size === "large") {
+    if (!age || age <= 0) return { min: 25, max: 45, label: "สุนัขพันธุ์ใหญ่โตเต็มวัย 25-45 กก." };
+    if (age < 0.5) return { min: 8, max: 20, label: "ลูกสุนัขพันธุ์ใหญ่ < 6 เดือน 8-20 กก." };
+    if (age < 1) return { min: 15, max: 35, label: "ลูกสุนัขพันธุ์ใหญ่ 6-12 เดือน 15-35 กก." };
+    if (age >= 7) return { min: 22, max: 40, label: "สุนัขพันธุ์ใหญ่สูงวัย 22-40 กก." };
+    return { min: 25, max: 45, label: "สุนัขพันธุ์ใหญ่โตเต็มวัย 25-45 กก." };
+  }
+  
+  // Default is 'medium'
+  if (!age || age <= 0) return { min: 10, max: 25, label: "สุนัขพันธุ์กลางโตเต็มวัย 10-25 กก." };
+  if (age < 0.5) return { min: 3, max: 10, label: "ลูกสุนัขพันธุ์กลาง < 6 เดือน 3-10 กก." };
+  if (age < 1) return { min: 6, max: 20, label: "ลูกสุนัขพันธุ์กลาง 6-12 เดือน 6-20 กก." };
+  if (age >= 7) return { min: 9, max: 22, label: "สุนัขพันธุ์กลางสูงวัย 9-22 กก." };
+  return { min: 10, max: 25, label: "สุนัขพันธุ์กลางโตเต็มวัย 10-25 กก." };
+}
+
+export function assessWeight(species: PetSpecies, kg: number, age: number | null, dogSize?: string): WeightAssessment {
+  const range = getReferenceWeightRange(species, age, dogSize);
+  const lowerBuffer = range.min * 0.95;
+  const upperBuffer = range.max * 1.05;
+
+  if (kg < lowerBuffer) {
+    const target = Math.round(range.min * 10) / 10;
+    return {
+      status: "under",
+      action: "gain",
+      title: "น้ำหนักต่ำกว่าช่วงอ้างอิง",
+      summary: "ควรเพิ่มน้ำหนักแบบค่อยเป็นค่อยไป และดูความสมบูรณ์ของกล้ามเนื้อร่วมด้วย",
+      idealRange: range.label,
+      targetLabel: `เป้าหมายเบื้องต้น: อย่างน้อย ${target.toLocaleString()} กก.`,
+      tone: { color: "#8B6A16", soft: "#FFF7DE", border: "#F1DEA2" },
+    };
+  }
+
+  if (kg > upperBuffer) {
+    const target = Math.round(range.max * 10) / 10;
+    return {
+      status: "over",
+      action: "lose",
+      title: "น้ำหนักสูงกว่าช่วงอ้างอิง",
+      summary: "ควรลดน้ำหนักอย่างปลอดภัยด้วยการคุมพลังงานและเพิ่มกิจกรรมที่เหมาะสม",
+      idealRange: range.label,
+      targetLabel: `เป้าหมายเบื้องต้น: ไม่เกิน ${target.toLocaleString()} กก.`,
+      tone: { color: "#B64B3C", soft: "#FFF4F2", border: "#F2C9C2" },
+    };
+  }
+
+  return {
+    status: "ideal",
+    action: "maintain",
+    title: "อยู่ในช่วงมาตรฐานเบื้องต้น",
+    summary: "ควรคงน้ำหนัก และติดตามรูปร่างกับรอบอก/เอวเป็นประจำ",
+    idealRange: range.label,
+    targetLabel: "เป้าหมายเบื้องต้น: คงน้ำหนักปัจจุบัน",
+    tone: { color: "#3F7750", soft: "#EEF7F0", border: "#CFE6D2" },
+  };
+}

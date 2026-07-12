@@ -192,7 +192,7 @@ export function CategoryAdminManager() {
     setLoading(false);
   };
 
-  useEffect(() => { void loadCategories(); }, []);
+  useEffect(() => { queueMicrotask(() => { void loadCategories(); }); }, []);
 
   /* ── Drag handlers ── */
 

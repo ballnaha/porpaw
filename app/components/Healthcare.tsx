@@ -165,7 +165,7 @@ export const Healthcare: React.FC<HealthcareProps> = ({ handleLineLogin }) => {
           gap: { xs: 1.5, sm: 2.5, md: 3 },
         }}
       >
-        {SERVICES.map(({ category, type, title, province, distance, img, rating, reviews, status, tags, featured }) => (
+        {SERVICES.map(({ type, title, province, distance, img, rating, reviews, status, tags, featured }) => (
           <Box
             component="div"
             key={title}
